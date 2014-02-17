@@ -1,8 +1,14 @@
+//gcc -I/usr/local/include -O0 src/papi_wrapper.c /usr/local/lib/libpapi.a -Wall -g  -o bin/papi_wrapper
+
+
+#define _GNU_SOURCE
+
 #include <papi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sched.h>
 #include <sys/wait.h>
 
 int main (int argc, char ** argv) {
@@ -33,10 +39,17 @@ int main (int argc, char ** argv) {
     
     if(fork() == 0){ /*Child executes the RT task in one core*/
         int i;
+        cpu_set_t mask;
+        /*Setting the affinity of the child*/
+        CPU_ZERO(&mask);
+        CPU_SET(1, &mask);
+        sched_setaffinity(0, sizeof(mask), &mask);
+
         for(i=0;i<10;i++){
             printf("%d> I'm the child process\n", getpid());
             sleep(1);
         }
+        
         exit(0);
     }
     wait(NULL);
