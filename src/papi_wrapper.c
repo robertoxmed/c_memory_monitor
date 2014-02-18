@@ -11,17 +11,56 @@
 #include <sched.h>
 #include <sys/wait.h>
 
+void print_help();
+
+void check_arguments (int argc, char ** argv){
+    if(argc == 2 && (strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0)){
+        print_help();
+        exit(0);
+    }else if (argc >= 2){
+        printf("====================================\n");
+        printf("papi_wrapper execution:\n==================================\n");
+        printf("Launching the wrapper with %s as the RT task.\n", argv[1]);
+    }else{
+        fprintf(stderr, "Usage: %s <RT task> <arg0> ... <argN>\n", argv[0]);
+        exit(1);
+    }
+    
+}
+
+void check_papi(){
+    int retval;
+
+    //Initialize the library
+    retval = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(retval != PAPI_VER_CURRENT){
+        fprintf(stderr, "PAPI library init error!\nNow exiting.\n");
+        exit(-1);
+    }
+
+    //Check if the events exist
+    if(PAPI_query_event (PAPI_L1_DCM) != PAPI_OK){
+        fprintf(stderr, "No L1 cache miss counter.\n");
+        exit(-1);
+    }
+    if(PAPI_query_event (PAPI_L2_DCM) != PAPI_OK){
+        fprintf(stderr, "No L2 cache miss counter.\n");
+        exit(-1);
+    }
+    
+}
+
 int main (int argc, char ** argv) {
     
     int papi_events[2] = { PAPI_L1_DCM, PAPI_L2_DCM };
     int ret, num_hwcntrs = 0;
     long_long papi_values[2];
 
-    if(argc != 1){
-        fprintf(stderr, "Usage: %s <RT task>\n", argv[0]);
-        exit(1);
-    }
-    
+    check_arguments(argc, argv);
+
+    check_papi();
+
     if((num_hwcntrs = PAPI_num_counters()) <= PAPI_OK){
         perror("PAPI_num_counters");
         exit(1);
@@ -36,24 +75,19 @@ int main (int argc, char ** argv) {
         fprintf(stderr, "PAPI failed to start counters: %s\n", PAPI_strerror(ret));
         exit(3);
     }
+
+    /*Child executes the RT task in one core*/
     
-    if(fork() == 0){ /*Child executes the RT task in one core*/
-        int i;
+    if(fork() == 0){         
         cpu_set_t mask;
         /*Setting the affinity of the child*/
         CPU_ZERO(&mask);
         CPU_SET(1, &mask);
         sched_setaffinity(0, sizeof(mask), &mask);
 
-        for(i=0;i<10;i++){
-            printf("%d> I'm the child process\n", getpid());
-            sleep(1);
-        }
-        
-        exit(0);
-
-        /*execvp(argv[1], NULL);*/
+        execl(argv[1], "RT task", NULL);
     }
+
     wait(NULL);
 
     if((ret = PAPI_read_counters(papi_values, 2)) != PAPI_OK){
@@ -61,8 +95,18 @@ int main (int argc, char ** argv) {
         exit(4);
     }
     
-    fprintf(stdout, "L1 data cache miss %lld.\n", papi_values[0]);
-    fprintf(stdout, "L2 data cache miss %lld.\n", papi_values[1]);
+    printf("L1 data cache miss %lld.\n", papi_values[0]);
+    printf("L2 data cache miss %lld.\n", papi_values[1]);
+    printf("================================================\n");
+    printf("end of papi_wrapper\n");
 
     return 0;
+}
+
+void print_help(){
+    printf("papi_wrapper help:\n===========================================\n");
+    printf("Example of execution:\n");
+    printf("./papi_wrapper <rt_task> <arg0> <arg1> ... <argN>\n\n");
+    printf("===========================================\n");
+
 }
