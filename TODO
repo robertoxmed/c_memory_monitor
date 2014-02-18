@@ -1,0 +1,8 @@
+TODO LIST
+
+papi_wrapper:
+
+    - Tester avec une vrai tâche temps réel
+    - Les compteurs de cache miss sont partagés => Commment savoir exactement combien de CM on a à cause de la tâche temps réel
+    - Isoler physiquement un coeur en utilisant les options du noyau (??)
+

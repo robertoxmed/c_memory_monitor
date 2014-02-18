@@ -15,7 +15,7 @@ int main (int argc, char ** argv) {
     
     int papi_events[2] = { PAPI_L1_DCM, PAPI_L2_DCM };
     int ret, num_hwcntrs = 0;
-    long long values[2];
+    long_long papi_values[2];
 
     if(argc != 1){
         fprintf(stderr, "Usage: %s <RT task>\n", argv[0]);
@@ -51,16 +51,18 @@ int main (int argc, char ** argv) {
         }
         
         exit(0);
+
+        /*execvp(argv[1], NULL);*/
     }
     wait(NULL);
 
-    if((ret = PAPI_read_counters(values, 2)) != PAPI_OK){
+    if((ret = PAPI_read_counters(papi_values, 2)) != PAPI_OK){
         fprintf(stderr, "PAPI failed to read counters\n");
         exit(4);
     }
     
-    fprintf(stdout, "L1 data cache miss %lld.\n", values[0]);
-    fprintf(stdout, "L2 data cache miss %lld.\n", values[1]);
+    fprintf(stdout, "L1 data cache miss %lld.\n", papi_values[0]);
+    fprintf(stdout, "L2 data cache miss %lld.\n", papi_values[1]);
 
     return 0;
 }
