@@ -19,7 +19,8 @@ void check_arguments (int argc, char ** argv){
         exit(0);
     }else if (argc >= 2){
         printf("====================================\n");
-        printf("papi_wrapper execution:\n==================================\n");
+        printf("papi_wrapper execution:\n");
+        printf("==================================\n");
         printf("Launching the wrapper with %s as the RT task.\n", argv[1]);
     }else{
         fprintf(stderr, "Usage: %s <RT task> <arg0> ... <argN>\n", argv[0]);
@@ -82,7 +83,7 @@ int main (int argc, char ** argv) {
         cpu_set_t mask;
         /*Setting the affinity of the child*/
         CPU_ZERO(&mask);
-        CPU_SET(1, &mask);
+        CPU_SET(3, &mask);
         sched_setaffinity(0, sizeof(mask), &mask);
 
         execl(argv[1], "RT task", NULL);
