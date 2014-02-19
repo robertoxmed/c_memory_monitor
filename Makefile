@@ -1,17 +1,24 @@
-CC=gcc
-INCL=-I/usr/local/include
-PATH=/usr/local/lib/libpapi.a
-CFLAGS=-Wall -g 
-TAR=PSAR
+LIB = ./lib
+PAPI_LIB = ./lib/libpapi.a
+CFLAGS = -Wall -g 
+
+CC=gcc $(CFLAGS)
+
+BIN=./bin
+SRC=./src
+OBJ=./obj
+INC=./include
+
 EXEC=papi_wrapper
+TAR = PSAR
 
-all: $(EXEC)
+all: $(BIN)/$(EXEC)
 
-papi_wrapper: src/papi_wrapper.c
-	$(CC) $(INCL) obj/papi_wrapper.c $(PATH) -o bin/papi_wrapper 
+$(BIN)/$(EXEC) : $(OBJ)/$(EXEC).o
+	$(CC) $< $(PAPI_LIB) -o $@
 
-obj/papi_wrapper.o: src/papi_wrapper.c
-	$(CC) $(INCL) -O0 src/papi_wrapper.c $(CFLAGS) -o obj/papi_wrapper.o
+$(OBJ)/$(EXEC).o : $(SRC)/$(EXEC).c
+	$(CC) -I $(INC) -c $< -o $@
 
 tar:
 	tar -cvf - ../$(TAR) | gzip >../$(TAR).tgz
