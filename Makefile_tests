@@ -1,6 +1,4 @@
-LIB = ./lib
-PAPI_LIB = ./lib/libpapi.a
-CFLAGS = -Wall -g -D_GNU_SOURCE
+CFLAGS = -Wall -g
 
 CC=gcc $(CFLAGS)
 
@@ -9,8 +7,7 @@ SRC=./src
 OBJ=./obj
 INC=./include
 
-EXEC=papi_wrapper
-TAR = PSAR
+EXEC=dummy_task
 
 all: $(BIN)/$(EXEC)
 
@@ -25,8 +22,5 @@ tar:
 
 clean:
 	rm obj/*.o bin/*
-
-tests:
-	make -f Makefile_tests
 
 package: clean tar

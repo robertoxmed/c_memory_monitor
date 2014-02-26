@@ -1,4 +1,3 @@
-//gcc -I/usr/local/include -O0 src/papi_wrapper.c /usr/local/lib/libpapi.a -Wall -g  -o bin/papi_wrapper
 #include <papi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,26 +111,29 @@ int main (int argc, char ** argv) {
 
 	memset(&action, 0, sizeof(sigaction));
 
-    /*Child executes the RT task in one core*/
-    printf("\nRT output:\n\n");
+    printf("\nRT output:\n");
     printf("====================================\n");
 
-/**********************************************************************************************/	
+/**********************************************************************************************/
+    //Child executes the RT task in one core		
 	if((rt_child = fork())==0){
 		cpu_set_t mask;
-	    /*Setting the affinity of the child*/
+	    //Setting the affinity of the child
 	    CPU_ZERO(&mask);
 	    CPU_SET(1, &mask);
-		/*Setting the granularity of the PAPI event set*/
+	    sched_setaffinity(0, sizeof(mask), &mask);		
+
+		//Setting the granularity of the PAPI event set
 		set_option(getpid());
-		/*Initialize the counters*/
+
+		//Initialize the counters
 		if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
 	    	fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
 	        exit(3);
     	}
-	    sched_setaffinity(0, sizeof(mask), &mask);
 
 	    execl(argv[1], "RT task", NULL);
+
     }else if(rt_child == -1){
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(4);
@@ -154,6 +156,11 @@ int main (int argc, char ** argv) {
     printf("PAPI Wrapper End \n");
     printf("============================================\n");
 	
+	if((ret = PAPI_stop(PAPI_EventSet, papi_values)) != PAPI_OK){
+		fprintf(stderr, "PAPI failed to stop counters.\n");
+		exit(5);
+	}
+
 	if((ret = PAPI_destroy_eventset(&PAPI_EventSet)) != PAPI_OK){
 		fprintf(stderr, "PAPI failed to stop the current events.\n");
 		exit(5);
