@@ -1,52 +1,109 @@
-#include "../include/rt_task.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-void init_timer(rt_task * task, int delay){
-    struct sigevent sig_ev;
-    strunct itimerspec new_t, old_t;
-    sig_ev.sigev_notify = SIGEV_SIGNAL;
-    sig_ev.sigev_signo = SIGTRMIN;
-    sig_ev.sigev_value.sival_ptr = task.rt_timer;
+#define SIZE 3
+
+typedef struct op{
+  int mat[SIZE][SIZE];
+  struct op *next;
+}list_op;
+
+/*Paramètre ite = nombre de produits matriciels à effectuer */
+int rt_task(int ite){
+
+  list_op *head = NULL;
+  list_op *op_1 = NULL;
+  list_op *op_2 = NULL;
+  list_op *res = NULL;
     
-    if(timer_creat(CLOCK_REALTIME, &sig_ev, &task.timer) != -1){
-        new_t.it_value.tv_sec = 0;
-        new_t.it_value.tv_usec = delay;
-        new_t.it_interval.tv_sec = 0;
-        new_t.it_interval.tv_usec = delay;
-    }else{
-        fprintf(stderr, "Timer non initialisé\n");
-        exit(1);
+  int i,j;
+
+  op_1 = (list_op *)malloc(sizeof(list_op));
+  op_2 = (list_op *)malloc(sizeof(list_op));
+
+  if (!op_1 || !op_2){
+    printf("Erreur allocation mémoire\n");
+    exit(EXIT_FAILURE);
+  }
+
+  head = op_1;
+  op_1->next = op_2;
+
+  /*Remplir deux matrices initiales*/
+  for (i=0; i<SIZE; i++){
+    for (j=0; j<SIZE; j++){
+      if(j%2==0){
+	op_2->mat[i][j] = j;
+	head->mat[i][j] = j;
+      }
+      else {
+	op_2->mat[i][j] = i;
+	head->mat[i][j] = i;
+      }
     }
-    timer_settime(task.rt_timer, 0, &new_t, &old_t);
+  }
+
+
+  /*Calcul matriciel*/
+  int k,l = 0;
+  
+  printf("Début de calcul\n");
+  printf("----------------\n");
+  while(l!=ite){
+    res = (list_op *)malloc(sizeof(list_op));
+    op_2->next=res;
+
+    if (!res){
+      printf("Erreur allocation mémoire\n");
+      exit(EXIT_FAILURE);
+    }
+  
+    /*Produit matriciel*/
+    for (i=0; i<SIZE; i++){
+      for (j=0; j<SIZE; j++){
+	res->mat[i][j]=0; 
+	for (k=0;k<SIZE;k++) 
+	  { 
+	    res->mat[i][j] += op_1->mat[i][k] *  op_2->mat[k][j]; 
+	  }
+      }
+    }
+     for (i=0; i<SIZE; i++){
+       for (j=0; j<SIZE; j++){
+	 printf("%d ",res->mat[i][j]);
+       }
+       printf("\n");
+     } 
+     op_1 = op_1->next;
+     op_2 = op_2->next;
+     res= res->next;
+
+     l++;
+     printf("----------------\n");
+  }
+
+
+
+  /*Libération mémoire*/
+
+  while(head->next){
+    res=head;
+    head = head->next;
+    free(res);
+    res=NULL;
+  }
+
+  free(head);
+
+  return 0;
 }
 
-void signal_handler(int signo, siginfo_t *info, void *context){
-    if(signo == SIGTRMIN){
-        //do work
-        //Do a write in L1 cache
-    }
-}
 
-int main (int argc, char ** argv){
 
-    rt_task the_task;
-    memset(&the_task, 0, sizeof(the_task));
-    
-    if((the_task.fd_w = open("../demo/example", O_RDWR)) == -1){
-        perror("open");
-        exit(1);
-    }
+int main(int argc, char* argv[]){
 
-    if(argc != 2){
-        fprintf(stderr, "Paramètres par défaut utilisés\n");
-        fprintf(stderr, "Timer à 100 ms\n";
-        init_timer(&the_task, 100);
+  rt_task(atoi(argv[1]));
 
-    }else{
-        fprintf(stderr, "Timer à %d\n", atoi(argv[1]));
-        init_timer(&the_task, atoi(argv[1]);
-    }
+  return 0;
 
-    for(;;) ; //Idle until timer launches
-
-    return 0;
 }
