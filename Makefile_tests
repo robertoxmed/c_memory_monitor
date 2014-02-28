@@ -2,12 +2,12 @@ CFLAGS = -Wall -g
 
 CC=gcc $(CFLAGS)
 
-BIN=./bin
-SRC=./src
-OBJ=./obj
-INC=./include
+BIN=bin
+SRC=src
+OBJ=obj
+INC=include
 
-EXEC=dummy_task rt_task
+EXEC=rt_task
 
 all: $(BIN)/$(EXEC)
 
@@ -17,10 +17,5 @@ $(BIN)/$(EXEC) : $(OBJ)/$(EXEC).o
 $(OBJ)/$(EXEC).o : $(SRC)/$(EXEC).c
 	$(CC) -I $(INC) -c $< -o $@
 
-tar:
-	tar -cvf - ../$(TAR) | gzip >../$(TAR).tgz
-
 clean:
 	rm obj/*.o bin/*
-
-package: clean tar
