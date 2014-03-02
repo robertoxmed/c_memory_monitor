@@ -1,5 +1,5 @@
 LIB = lib
-PAPI_LIB = lib/libpapi.a
+PAPI_LIB = lib/libpapi32.a
 CFLAGS = -Wall -g -D_GNU_SOURCE
 
 CC=gcc $(CFLAGS)
