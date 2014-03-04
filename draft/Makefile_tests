@@ -1,0 +1,26 @@
+CFLAGS = -Wall -g
+
+CC=gcc $(CFLAGS)
+
+BIN=bin
+SRC=src
+OBJ=obj
+INC=include
+
+all: $(BIN)/rt_task $(BIN)/attaquant
+
+
+$(BIN)/rt_task: $(OBJ)/rt_task.o
+	$(CC) -o $@ $^
+
+$(OBJ)/rt_task: $(SRC)/rt_task.o
+	$(CC) -c -o $@ $^	
+
+$(BIN)/attaquant: $(OBJ)/attaquant.o
+	$(CC) -o $@ $^
+
+$(OBJ)/attaquant: $(SRC)/attaquant.o
+	$(CC) -c -o $@ $^	
+
+clean:
+	rm obj/*.o bin/*

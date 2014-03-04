@@ -1,32 +1,40 @@
 LIB = lib
-PAPI_LIB = lib/libpapi32.a
-CFLAGS = -Wall -g -D_GNU_SOURCE
+PAPI_LIB = lib/libpapi.a
+CFLAGS = -D_GNU_SOURCE
 
-CC=gcc $(CFLAGS)
+CC=gcc -Wall -g
 
-BIN=bin
-SRC=src
-OBJ=obj
 INC=include
 
 EXEC=papi_wrapper
 TAR = PSAR
 
-all: $(BIN)/$(EXEC)
+all: bin/rt_task bin/attaquant_task bin/papi_wrapper
 
-$(BIN)/$(EXEC) : $(OBJ)/$(EXEC).o
-	$(CC) $< $(PAPI_LIB) -o $@
+bin/papi_wrapper: obj/papi_wrapper.o
+	$(CC) $(CFLAGS) $< $(PAPI_LIB) -o $@
 
-$(OBJ)/$(EXEC).o : $(SRC)/$(EXEC).c
-	$(CC) -I $(INC) -c $< -o $@
+obj/papi_wrapper.o: src/papi_wrapper.c
+	$(CC) $(CFLAGS) -I $(INC) -c $< -o $@
+
+bin/rt_task: obj/rt_task.o
+	$(CC) -o $@ $^
+
+obj/rt_task.o: src/rt_task.c
+	$(CC) -c -o $@ $^	
+
+bin/attaquant_task: obj/attaquant_task.o
+	$(CC) -o $@ $^
+
+obj/attaquant_task.o: src/attaquant_task.c
+	$(CC) -c -o $@ $^
+
+
 
 tar:
 	tar -cvf - ../$(TAR) | gzip >../$(TAR).tgz
 
-clean:
-	rm obj/*.o bin/*
-
-tests:
-	make -f Makefile_tests
+clean: 
+	rm obj/* bin/*
 
 package: clean tar
