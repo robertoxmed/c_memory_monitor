@@ -1,12 +1,15 @@
 LIB = lib
-PAPI_LIB = lib/libpapi.a
+UNAME := $(shell uname -m)
+
+ifeq ($(UNAME), x86_64)
+	PAPI_LIB = lib/libpapi.a
+else
+	PAPI_LIB = lib/libpapi32.a
+endif
+
 CFLAGS = -D_GNU_SOURCE
-
 CC=gcc -Wall -g
-
 INC=include
-
-EXEC=papi_wrapper
 TAR = PSAR
 
 all: bin/rt_task bin/attaquant_task bin/papi_wrapper
@@ -28,8 +31,6 @@ bin/attaquant_task: obj/attaquant_task.o
 
 obj/attaquant_task.o: src/attaquant_task.c
 	$(CC) -c -o $@ $^
-
-
 
 tar:
 	tar -cvf - ../$(TAR) | gzip >../$(TAR).tgz
