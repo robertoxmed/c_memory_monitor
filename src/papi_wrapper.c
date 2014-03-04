@@ -84,6 +84,7 @@ void set_option(void){
 
 	if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
 		fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "Make sure you run this program as root!\n");
 		exit(-1);
 	}
 }
