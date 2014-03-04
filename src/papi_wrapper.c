@@ -6,11 +6,6 @@
 #include <sched.h>
 #include <sys/wait.h>
 
-//Global variables
-long long papi_values[2];
-
-int PAPI_EventSet = PAPI_NULL;
-
 void print_help();
 
 void check_arguments (int argc, char ** argv){
@@ -74,7 +69,7 @@ void check_papi(int *PAPI_EventSet){
 
 //Setting the granularity of the PAPI event set.
 //The set will be attached to the RT child. Couldn't attach to the core itself.
-void set_option(void){
+void set_option(int PAPI_EventSet){
 	int retval;
 	PAPI_cpu_option_t cpu_opt;
 	
@@ -87,10 +82,31 @@ void set_option(void){
         fprintf(stderr, "Make sure you run this program as root!\n");
 		exit(-1);
 	}
+
+    PAPI_granularity_option_t gran_opt;
+
+    gran_opt.def_cidx = 0;
+    gran_opt.eventset = PAPI_EventSet;
+    gran_opt.granularity = PAPI_GRN_SYS;
+
+    if((retval = PAPI_set_opt(PAPI_GRANUL, (PAPI_option_t*)&gran_opt)) != PAPI_OK){
+        exit(-1);
+    }
+
+    PAPI_domain_option_t domain_opt;
+    domain_opt.def_cidx = 0;
+    domain_opt.eventset = PAPI_EventSet;
+    domain_opt.domain = PAPI_DOM_USER;
+
+    if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
+        fprintf(stderr, "PAPI domain\n");
+        exit(-1);
+    }
+
 }
 
 //Handler that will read the cache miss using a POSIX alarm
-void sig_handler(int signum){
+/*void sig_handler(int signum){
 	int ret;
 	if(signum == SIGALRM){ //Read the counters
 		if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
@@ -98,32 +114,32 @@ void sig_handler(int signum){
 			exit(10);
 		}	
 	}
-}
+}*/
 
 int main (int argc, char ** argv) {
     int ret;
+    
+    long long papi_values[2];
+    int PAPI_EventSet = PAPI_NULL;
 	struct sigaction action;
 	pid_t rt_child;
 
     check_arguments(argc, argv);
 
-    check_papi(&PAPI_EventSet);
-
 	memset(&action, 0, sizeof(sigaction));
+
 
     printf("\nRT output:\n");
     printf("====================================\n");
-    
-    set_option();
 
-    if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
-        exit(3);
-    }   
+    check_papi(&PAPI_EventSet);
+
+    set_option(PAPI_EventSet);
 
 /**********************************************************************************************/
     //Child executes the RT task in one core		
 	if((rt_child = fork())==0){
+
 		cpu_set_t mask;
         struct sched_param s_param;
 
@@ -143,37 +159,35 @@ int main (int argc, char ** argv) {
         }
 
 	    execl(argv[1], "RT task", argv[2], NULL);
-
+        
     }else if(rt_child == -1){
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(4);
-	}
 /**********************************************************************************************/
-    wait(NULL);
+	}else{
+        if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
+            fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
+            exit(3);
+        }
+        wait(NULL);
 
-    if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
-        fprintf(stderr, "PAPI failed to read counters: %s\n", PAPI_strerror(ret));
-        exit(4);
+        if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
+            fprintf(stderr, "PAPI failed to read counters: %s\n", PAPI_strerror(ret));
+            exit(4);
+        }
+
+
+        printf("\n============================================\n");
+        printf("Results:\n");
+        printf("============================================\n");
+        printf("L1 data cache miss %lld.\n", papi_values[0]);
+        printf("L2 data cache miss %lld.\n", papi_values[1]);
+        printf("============================================\n");
+        printf("PAPI Wrapper End \n");
+        printf("============================================\n");
+        
+        PAPI_shutdown();
     }
-
-    printf("\n============================================\n");
-    printf("Results:\n");
-    printf("============================================\n");
-    printf("L1 data cache miss %lld.\n", papi_values[0]);
-    printf("L2 data cache miss %lld.\n", papi_values[1]);
-    printf("============================================\n");
-    printf("PAPI Wrapper End \n");
-    printf("============================================\n");
-	
-	if((ret = PAPI_stop(PAPI_EventSet, papi_values)) != PAPI_OK){
-		fprintf(stderr, "PAPI failed to stop counters: %s\n", PAPI_strerror(ret));
-		exit(5);
-	}
-
-	if((ret = PAPI_destroy_eventset(&PAPI_EventSet)) != PAPI_OK){
-		fprintf(stderr, "PAPI failed to stop the current events: %s\n", PAPI_strerror(ret));
-		exit(5);
-	}
 
     return 0;
 }
@@ -183,8 +197,8 @@ void print_help(){
     printf("PAPI Wrapper Help:\n");
     printf("===========================================\n");    
     printf("Example of execution:\n");
-    printf("./papi_wrapper <rt_task> <arg0> <arg1> ... <argN>\n\n");
-    printf("This program will isolate a real time task in the 3rd core of the processor.\n");
+    printf("sudo ./papi_wrapper <rt_task> <arg0> <arg1> ... <argN>\n\n");
+    printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("The core should be isolated using [isolcpus] as Kernel command\n");
     printf("===========================================\n");
 }
