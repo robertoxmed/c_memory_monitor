@@ -158,7 +158,7 @@ int main (int argc, char ** argv) {
 
         if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
-            exit(10);
+            exit(4);
         }
 
         print_counters(papi_values);
