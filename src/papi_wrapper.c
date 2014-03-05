@@ -6,19 +6,25 @@
 #include <sched.h>
 #include <sys/wait.h>
 
+//Global values used for the timer
+long long papi_values[2];
+int PAPI_EventSet = PAPI_NULL;
+
 void print_help();
+
+void print_counters(long long *values);
 
 void check_arguments (int argc, char ** argv){
     if(argc == 2 && (strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0)){
         print_help();
         exit(0);
-    }else if (argc >= 2){
+    }else if (argc == 3){
         printf("====================================\n");
         printf("PAPI Wrapper Execution:\n\n");
         printf("Launching the wrapper with %s as the RT task.\n", argv[1]);
         printf("====================================\n");        
     }else{
-        fprintf(stderr, "Usage: %s <RT task> <arg0> ... <argN>\n", argv[0]);
+        fprintf(stderr, "Usage: sudo %s <RT task> <arg0> \n", argv[0]);
         exit(1);
     }   
 }
@@ -85,55 +91,33 @@ void set_option(int PAPI_EventSet){
 
     PAPI_granularity_option_t gran_opt;
 
-    gran_opt.def_cidx = 0;
+    gran_opt.def_cidx = 1;
     gran_opt.eventset = PAPI_EventSet;
     gran_opt.granularity = PAPI_GRN_SYS;
 
     if((retval = PAPI_set_opt(PAPI_GRANUL, (PAPI_option_t*)&gran_opt)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: Setting granularity : %s\n", PAPI_strerror(retval));
         exit(-1);
     }
 
     PAPI_domain_option_t domain_opt;
-    domain_opt.def_cidx = 0;
+    domain_opt.def_cidx = 1;
     domain_opt.eventset = PAPI_EventSet;
     domain_opt.domain = PAPI_DOM_USER;
 
     if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
-        fprintf(stderr, "PAPI domain\n");
+        fprintf(stderr, "PAPI error: Setting domain : %s\n", PAPI_strerror(retval));
         exit(-1);
     }
 
 }
 
-//Handler that will read the cache miss using a POSIX alarm
-/*void sig_handler(int signum){
-	int ret;
-	if(signum == SIGALRM){ //Read the counters
-		if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
-			fprintf(stderr, "PAPI error: couldn't retreive counter values.\n");
-			exit(10);
-		}	
-	}
-}*/
-
 int main (int argc, char ** argv) {
     int ret;
-    
-    long long papi_values[2];
-    int PAPI_EventSet = PAPI_NULL;
-	struct sigaction action;
 	pid_t rt_child;
 
     check_arguments(argc, argv);
-
-	memset(&action, 0, sizeof(sigaction));
-
-
-    printf("\nRT output:\n");
-    printf("====================================\n");
-
     check_papi(&PAPI_EventSet);
-
     set_option(PAPI_EventSet);
 
 /**********************************************************************************************/
@@ -169,23 +153,15 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(3);
         }
+        
         wait(NULL);
 
         if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
-            fprintf(stderr, "PAPI failed to read counters: %s\n", PAPI_strerror(ret));
-            exit(4);
+            fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
+            exit(10);
         }
 
-
-        printf("\n============================================\n");
-        printf("Results:\n");
-        printf("============================================\n");
-        printf("L1 data cache miss %lld.\n", papi_values[0]);
-        printf("L2 data cache miss %lld.\n", papi_values[1]);
-        printf("============================================\n");
-        printf("PAPI Wrapper End \n");
-        printf("============================================\n");
-        
+        print_counters(papi_values);
         PAPI_shutdown();
     }
 
@@ -201,4 +177,16 @@ void print_help(){
     printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("The core should be isolated using [isolcpus] as Kernel command\n");
     printf("===========================================\n");
+}
+
+void print_counters(long long *values){
+
+    printf("\n============================================\n");
+    printf("Results:\n");
+    printf("============================================\n");
+    printf("L1 data cache miss %lld.\n", values[0]);
+    printf("L2 data cache miss %lld.\n", values[1]);
+    printf("============================================\n");
+    printf("PAPI Wrapper End \n");
+    printf("============================================\n");
 }

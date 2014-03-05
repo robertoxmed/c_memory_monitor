@@ -17,12 +17,13 @@ void rt_task_init(rt_list *list){
     /*Remplir deux matrices initiales*/
     for (i=0; i<SIZE; i++){
         for (j=0; j<SIZE; j++){
+            srand(getpid()+i+j);
             if(j%2==0){
-                op_2->mat[i][j] = j;
-                op_1->mat[i][j] = j;
+                op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
+                op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
             }else {
-                op_2->mat[i][j] = i;
-                op_1->mat[i][j] = i;
+                op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
+                op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
             }
         }
     }
@@ -60,7 +61,7 @@ void rt_task_nextiter(rt_list *list){
             printf("%d ",res->mat[i][j]);
         }
         printf("\n");
-    } 
+    }
     
     res->next = NULL;
     list->op2->next = res;
