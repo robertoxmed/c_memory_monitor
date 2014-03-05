@@ -18,8 +18,6 @@ int attaquant_write(int tempo){
             exit(1);
         }
 
-        //lseek(fd, (off_t)((float)rand()/ 100), SEEK_SET);
-
         ite++;
     }
     return 0;

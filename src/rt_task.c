@@ -21,10 +21,7 @@ void rt_task_init(rt_list *list){
             if(j%2==0){
                 op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
                 op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
-            }else {
-                op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
-                op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
-            }
+	    }
         }
     }
 
