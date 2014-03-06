@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 
 //Global values used for the timer
-long long papi_values[3];
+long long papi_values[6];
 int PAPI_EventSet = PAPI_NULL;
 
 void print_help();
@@ -30,13 +30,18 @@ void check_arguments (int argc, char ** argv){
 }
 
 //Checks the available events in the host's processor
-void check_papi(int *PAPI_EventSet){
+void check_papi(){
     int retval, num_hwcntrs = 0;
 
     //Initialize the library
     retval = PAPI_library_init(PAPI_VER_CURRENT);
     if(retval != PAPI_VER_CURRENT){
         fprintf(stderr, "PAPI error: library init error! %s\nNow exiting.\n", PAPI_strerror(retval));
+        exit(-1);
+    }
+
+    if((retval=PAPI_multiplex_init())!=PAPI_OK){
+        fprintf(stderr, "PAPI error: can't Initialize multiplexing %s\n", PAPI_strerror(retval));
         exit(-1);
     }
 
@@ -48,17 +53,23 @@ void check_papi(int *PAPI_EventSet){
         fprintf(stderr, "No hardware counters or PAPI error\n");
     else
         fprintf(stderr, "This system has %d available counters.\n", num_hwcntrs);
-
+    
     //Create the EventSet with existing events
-    if((retval=PAPI_create_eventset (PAPI_EventSet)) != PAPI_OK){
+    if((retval=PAPI_create_eventset (&PAPI_EventSet)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
         exit(-1);
     }
 
-    if ((retval=PAPI_assign_eventset_component(*PAPI_EventSet, 0)) != PAPI_OK){
+    if ((retval=PAPI_assign_eventset_component(PAPI_EventSet, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component: %s\n", PAPI_strerror(retval));
         exit(-1);
     }
+
+    if((retval=PAPI_set_multiplex(PAPI_EventSet)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        exit(-1);
+    }
+
 }
 
 //Setting the granularity of the PAPI event set.
@@ -97,30 +108,38 @@ void set_option(){
 		exit(-1);
 	}
 
-    if(PAPI_query_event (PAPI_L1_DCM) != PAPI_OK){
-        fprintf(stderr, "No L1 cache miss counter.\n");
-        exit(-1);
-    }
+    //L1 Cache miss
     if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L1_DCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L1 DCM to event set: %s.\n", PAPI_strerror(retval));
         exit(-1);
     }
-    if(PAPI_query_event (PAPI_L2_DCM) != PAPI_OK){
-        fprintf(stderr, "No L2 cache miss counter.\n");
-    }else{
-        if(PAPI_add_event(PAPI_EventSet, PAPI_L2_DCM) != PAPI_OK){
-            fprintf(stderr, "PAPI error: can't add L2 DCM to event set: %s\n", PAPI_strerror(retval));
-            exit(-1);
-        }
+    if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L1_ICM)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add L1 ICM to event set: %s.\n", PAPI_strerror(retval));
+        exit(-1);
     }
-    if(PAPI_query_event (PAPI_TOT_CYC) != PAPI_OK){
-        fprintf(stderr, "No total cycle counter.\n");
-    }else{
-        if(PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC) != PAPI_OK){
-            fprintf(stderr, "PAPI error: can't add TOT CYC to event set: %s\n", PAPI_strerror(retval));
-            exit(-1);
-        }
+    //L2 Cache miss
+    if((retval=PAPI_add_event(PAPI_EventSet, PAPI_L2_DCM)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add L2 DCM to event set: %s\n", PAPI_strerror(retval));
+        exit(-1);
     }
+    if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L2_ICM)) != PAPI_OK){
+       fprintf(stderr, "PAPI error: can't add L2 ICM to event set: %s.\n", PAPI_strerror(retval));
+        exit(-1);
+    }
+
+    //L3 Total cache miss
+    if((retval=PAPI_add_event(PAPI_EventSet, PAPI_L3_TCM)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add L3 TCM to event set: %s\n", PAPI_strerror(retval));
+        exit(-1);
+    }
+    
+    if(PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add TOT CYC to event set: %s\n", PAPI_strerror(retval));
+        exit(-1);
+    
+    }
+
+
 }
 
 int main (int argc, char ** argv) {
@@ -128,7 +147,9 @@ int main (int argc, char ** argv) {
 	pid_t rt_child;
 
     check_arguments(argc, argv);
-    check_papi(&PAPI_EventSet);
+    check_papi();
+
+    set_option();
 
 /**********************************************************************************************/
     //Child executes the RT task in one core		
@@ -160,8 +181,6 @@ int main (int argc, char ** argv) {
 /**********************************************************************************************/
 	}else{
 
-        set_option();
-
         if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(3);
@@ -169,13 +188,27 @@ int main (int argc, char ** argv) {
         
         wait(NULL);
 
+        if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
+            exit(4);
+        }
+
         if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
             exit(4);
         }
 
         print_counters(papi_values);
-        PAPI_shutdown();
+        
+        if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
+            exit(5);
+        }
+
+        if((ret=PAPI_destroy_eventset(&PAPI_EventSet))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
+            exit(6);
+        }
     }
 
     return 0;
@@ -198,9 +231,13 @@ void print_counters(long long *values){
     printf("Results:\n");
     printf("============================================\n");
     printf("L1 data cache miss %lld.\n", values[0]);
-    printf("L2 data cache miss %lld.\n", values[1]);
-    printf("Total cycles %lld.\n", values[2]);
-    printf("Cache miss percent : %2.3f\n", (((double)values[0]+(double)values[1])/(double)values[2])*100);
+    printf("L1 instruction cache miss %lld.\n", values[1]);
+    printf("L2 data cache miss %lld.\n", values[2]);
+    printf("L2 instruction cache miss %lld.\n", values[3]);
+    printf("L3 total cache miss %lld.\n", values[4]);
+    printf("Total cycles %lld.\n", values[5]);
+    printf("Cache miss percent : %2.3f\n", 
+        (((double)values[0]+(double)values[1]+(double)values[2]+(double)values[3]+(double)values[4])/(double)values[5])*100);
     printf("============================================\n");
     printf("PAPI Wrapper End \n");
     printf("============================================\n");

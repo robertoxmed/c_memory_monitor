@@ -2,7 +2,13 @@ TODO LIST
 
 papi_wrapper:
 
-    - Tester avec une vrai tâche temps réel
-    - Les compteurs de cache miss sont partagés => Commment savoir exactement combien de CM on a à cause de la tâche temps réel
-    - La tâche temps réel est-elle finie? Prelever les compteurs avec les intervalles de temps.
-	- utiliser un temporisateur pour que le wrapper recupère les valeurs des compteurs.
+	- Tester avec une vrai tâche temps réel
+	- utiliser un temporisateur pour que le wrapper recupère les valeurs des compteurs
+		Ceci a causé des erreurs d'overflow mémoire (retester)
+	- Créer une nouvelle tâche temps réel avec des tableaux en faissant des écritures et des lectures aléatoires
+	- Unités de mesures du wrapper?? (Des cycles?)
+
+Infos du processeur testé
+	2 caches L1 32kB
+	1 cache L2 256kB
+	1 cache L3 4096kB
