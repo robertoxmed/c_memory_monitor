@@ -10,7 +10,8 @@ int attaquant_write(int tempo){
 
     int ite=0;
     while(ite != tempo){
-        
+        srand(getpid()+ite);
+
         printf("Writing in tests/attaquant.txt : %d\n", ite);
 
         if(write(fd, &ite, sizeof(int)) == -1){
@@ -18,7 +19,7 @@ int attaquant_write(int tempo){
             exit(1);
         }
 
-        //lseek(fd, (off_t)((float)rand()/ 100), SEEK_SET);
+        //lseek(fd, (off_t)((float)rand()/ 100), SEEK_CUR);
 
         ite++;
     }

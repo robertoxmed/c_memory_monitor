@@ -19,11 +19,11 @@ void rt_task_init(rt_list *list){
         for (j=0; j<SIZE; j++){
             srand(getpid()+i+j);
             if(j%2==0){
-                op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
-                op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
+                op_2->mat[i][j] = j;
+                op_1->mat[i][j] = i;
             }else {
-                op_2->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
-                op_1->mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
+                op_2->mat[i][j] = i;
+                op_1->mat[i][j] = j;
             }
         }
     }
@@ -56,19 +56,19 @@ void rt_task_nextiter(rt_list *list){
         }
     }
     
-    for (i=0; i<SIZE; i++){
+    /*for (i=0; i<SIZE; i++){
         for (j=0; j<SIZE; j++){
             printf("%d ",res->mat[i][j]);
         }
         printf("\n");
-    }
+    }*/
     
     res->next = NULL;
     list->op2->next = res;
     list->op1 = list->op1->next;
     list->op2 = list->op2->next;
     
-    printf("----------------\n");
+    //printf("----------------\n");
 }
 
 void rt_task_destroy(rt_list *list){

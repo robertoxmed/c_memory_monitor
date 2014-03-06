@@ -48,35 +48,24 @@ void check_papi(int *PAPI_EventSet){
         fprintf(stderr, "No hardware counters or PAPI error\n");
     else
         fprintf(stderr, "This system has %d available counters.\n", num_hwcntrs);
-    
+
     //Create the EventSet with existing events
-    if(PAPI_create_eventset (PAPI_EventSet) != PAPI_OK){
+    if((retval=PAPI_create_eventset (PAPI_EventSet)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
         exit(-1);
     }
 
-    if(PAPI_query_event (PAPI_L1_DCM) != PAPI_OK){
-        fprintf(stderr, "No L1 cache miss counter.\n");
+    if ((retval=PAPI_assign_eventset_component(*PAPI_EventSet, 0)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: component: %s\n", PAPI_strerror(retval));
         exit(-1);
-    }
-    if(PAPI_add_event(*PAPI_EventSet, PAPI_L1_DCM) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't add L1 DCM to event set: %s.\n", PAPI_strerror(retval));
-        exit(-1);
-    }
-    if(PAPI_query_event (PAPI_L2_DCM) != PAPI_OK){
-        fprintf(stderr, "No L2 cache miss counter.\n");
-    }else{
-        if(PAPI_add_event(*PAPI_EventSet, PAPI_L2_DCM) != PAPI_OK){
-            fprintf(stderr, "PAPI error: can't add L2 DCM to event set: %s\n", PAPI_strerror(retval));
-            exit(-1);
-        }
     }
 }
 
 //Setting the granularity of the PAPI event set.
 //The set will be attached to the RT child. Couldn't attach to the core itself.
-void set_option(int PAPI_EventSet){
+void set_option(){
 	int retval;
+
 	PAPI_cpu_option_t cpu_opt;
 	
 	//Setting the granularity for the events only the RT core is interesting
@@ -91,7 +80,7 @@ void set_option(int PAPI_EventSet){
 
     PAPI_granularity_option_t gran_opt;
 
-    gran_opt.def_cidx = 1;
+    gran_opt.def_cidx = 0;
     gran_opt.eventset = PAPI_EventSet;
     gran_opt.granularity = PAPI_GRN_SYS;
 
@@ -101,13 +90,30 @@ void set_option(int PAPI_EventSet){
     }
 
     PAPI_domain_option_t domain_opt;
-    domain_opt.def_cidx = 1;
+    domain_opt.def_cidx = 0;
     domain_opt.eventset = PAPI_EventSet;
-    domain_opt.domain = PAPI_DOM_USER;
+    domain_opt.domain = PAPI_DOM_ALL;
 
     if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
         fprintf(stderr, "PAPI error: Setting domain : %s\n", PAPI_strerror(retval));
         exit(-1);
+    }
+
+    if(PAPI_query_event (PAPI_L1_DCM) != PAPI_OK){
+        fprintf(stderr, "No L1 cache miss counter.\n");
+        exit(-1);
+    }
+    if(PAPI_add_event(PAPI_EventSet, PAPI_L1_DCM) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add L1 DCM to event set: %s.\n", PAPI_strerror(retval));
+        exit(-1);
+    }
+    if(PAPI_query_event (PAPI_L2_DCM) != PAPI_OK){
+        fprintf(stderr, "No L2 cache miss counter.\n");
+    }else{
+        if(PAPI_add_event(PAPI_EventSet, PAPI_L2_DCM) != PAPI_OK){
+            fprintf(stderr, "PAPI error: can't add L2 DCM to event set: %s\n", PAPI_strerror(retval));
+            exit(-1);
+        }
     }
 
 }
@@ -118,7 +124,6 @@ int main (int argc, char ** argv) {
 
     check_arguments(argc, argv);
     check_papi(&PAPI_EventSet);
-    set_option(PAPI_EventSet);
 
 /**********************************************************************************************/
     //Child executes the RT task in one core		
@@ -149,6 +154,9 @@ int main (int argc, char ** argv) {
 		exit(4);
 /**********************************************************************************************/
 	}else{
+
+        set_option();
+
         if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(3);
