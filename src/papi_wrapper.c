@@ -7,7 +7,7 @@
 #include <sys/wait.h>
 
 //Global values used for the timer
-long long papi_values[2];
+long long papi_values[3];
 int PAPI_EventSet = PAPI_NULL;
 
 void print_help();
@@ -66,20 +66,18 @@ void check_papi(int *PAPI_EventSet){
 void set_option(){
 	int retval;
 
-	PAPI_cpu_option_t cpu_opt;
-	
-	//Setting the granularity for the events only the RT core is interesting
-    cpu_opt.eventset = PAPI_EventSet;
-    cpu_opt.cpu_num = 1;
+    //Setting the granularity for the events only the RT core is interesting
+    PAPI_domain_option_t domain_opt;
+    domain_opt.def_cidx = 0;
+    domain_opt.eventset = PAPI_EventSet;
+    domain_opt.domain = PAPI_DOM_USER;
 
-	if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
-		fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
-        fprintf(stderr, "Make sure you run this program as root!\n");
-		exit(-1);
-	}
+    if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: Setting domain : %s\n", PAPI_strerror(retval));
+        exit(-1);
+    }
 
     PAPI_granularity_option_t gran_opt;
-
     gran_opt.def_cidx = 0;
     gran_opt.eventset = PAPI_EventSet;
     gran_opt.granularity = PAPI_GRN_SYS;
@@ -89,21 +87,21 @@ void set_option(){
         exit(-1);
     }
 
-    PAPI_domain_option_t domain_opt;
-    domain_opt.def_cidx = 0;
-    domain_opt.eventset = PAPI_EventSet;
-    domain_opt.domain = PAPI_DOM_ALL;
+	PAPI_cpu_option_t cpu_opt;
+    cpu_opt.eventset = PAPI_EventSet;
+    cpu_opt.cpu_num = 1;
 
-    if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: Setting domain : %s\n", PAPI_strerror(retval));
-        exit(-1);
-    }
+	if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
+		fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "Make sure you run this program as root!\n");
+		exit(-1);
+	}
 
     if(PAPI_query_event (PAPI_L1_DCM) != PAPI_OK){
         fprintf(stderr, "No L1 cache miss counter.\n");
         exit(-1);
     }
-    if(PAPI_add_event(PAPI_EventSet, PAPI_L1_DCM) != PAPI_OK){
+    if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L1_DCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L1 DCM to event set: %s.\n", PAPI_strerror(retval));
         exit(-1);
     }
@@ -115,7 +113,14 @@ void set_option(){
             exit(-1);
         }
     }
-
+    if(PAPI_query_event (PAPI_TOT_CYC) != PAPI_OK){
+        fprintf(stderr, "No total cycle counter.\n");
+    }else{
+        if(PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC) != PAPI_OK){
+            fprintf(stderr, "PAPI error: can't add TOT CYC to event set: %s\n", PAPI_strerror(retval));
+            exit(-1);
+        }
+    }
 }
 
 int main (int argc, char ** argv) {
@@ -181,7 +186,7 @@ void print_help(){
     printf("PAPI Wrapper Help:\n");
     printf("===========================================\n");    
     printf("Example of execution:\n");
-    printf("sudo ./papi_wrapper <rt_task> <arg0> <arg1> ... <argN>\n\n");
+    printf("sudo ./papi_wrapper <rt_task> <arg0>\n\n");
     printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("The core should be isolated using [isolcpus] as Kernel command\n");
     printf("===========================================\n");
@@ -194,6 +199,8 @@ void print_counters(long long *values){
     printf("============================================\n");
     printf("L1 data cache miss %lld.\n", values[0]);
     printf("L2 data cache miss %lld.\n", values[1]);
+    printf("Total cycles %lld.\n", values[2]);
+    printf("Cache miss percent : %2.3f\n", (((double)values[0]+(double)values[1])/(double)values[2])*100);
     printf("============================================\n");
     printf("PAPI Wrapper End \n");
     printf("============================================\n");
