@@ -86,7 +86,7 @@ Mesures:
 \begin_deeper
 \begin_layout Enumerate
 Plateforme de mesures avec la librairie PAPI (sur les caches L1/L2, L3 si
- présent, accès mémoire
+ présent, accès mémoire)
 \end_layout
 
 \begin_layout Enumerate
@@ -139,12 +139,21 @@ Avancée
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 Modification tâche temps-réel pour pouvoir ajouter un temporisateur par
  la suite.
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection*
-Idée de taches attaquante au maximum le bus et les caches:
+Idée de taches attaquante occupant au maximum le bus et les caches:
 \end_layout
 
 \begin_layout Itemize
@@ -205,6 +214,31 @@ open, write, dupplication, lseek, close, read sur autre desc puis close.
 
 \begin_layout Standard
 write >> open en temps d'accès / write ~ dupplication
+\end_layout
+
+\begin_layout Subsection*
+Implémentations choisies:
+\end_layout
+
+\begin_layout Itemize
+open, write, close en boucle
+\end_layout
+
+\begin_layout Itemize
+open, read jusqu'à fin de fichier puis retour au début tant que le nombre
+ d'itérations désirés n'est pas atteint, close
+\end_layout
+
+\begin_layout Standard
+A effectuer dans cet ordre pour faire les tests.
+\end_layout
+
+\begin_layout Section*
+Questions / A faire:
+\end_layout
+
+\begin_layout Standard
+tester quel type de tâche attaquante est la plus gourmande.
 \end_layout
 
 \end_body
