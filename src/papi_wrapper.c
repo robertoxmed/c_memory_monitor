@@ -11,7 +11,6 @@ long long papi_values[6];
 int PAPI_EventSet = PAPI_NULL;
 
 void print_help();
-
 void print_counters(long long *values);
 
 void check_arguments (int argc, char ** argv){
@@ -19,10 +18,10 @@ void check_arguments (int argc, char ** argv){
         print_help();
         exit(0);
     }else if (argc == 3){
-        printf("====================================\n");
+        printf("============================================\n");
         printf("PAPI Wrapper Execution:\n\n");
         printf("Launching the wrapper with %s as the RT task.\n", argv[1]);
-        printf("====================================\n");        
+        printf("============================================\n");
     }else{
         fprintf(stderr, "Usage: sudo %s <RT task> <arg0> \n", argv[0]);
         exit(1);
@@ -37,17 +36,17 @@ void check_papi(){
     retval = PAPI_library_init(PAPI_VER_CURRENT);
     if(retval != PAPI_VER_CURRENT){
         fprintf(stderr, "PAPI error: library init error! %s\nNow exiting.\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(1);
     }
 
     if((retval=PAPI_multiplex_init())!=PAPI_OK){
         fprintf(stderr, "PAPI error: can't Initialize multiplexing %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(2);
     }
 
     if((num_hwcntrs = PAPI_num_counters()) <= PAPI_OK){
         perror("PAPI_num_counters");
-        exit(1);
+        exit(3);
     }
     if(num_hwcntrs < 2)
         fprintf(stderr, "No hardware counters or PAPI error\n");
@@ -57,17 +56,17 @@ void check_papi(){
     //Create the EventSet with existing events
     if((retval=PAPI_create_eventset (&PAPI_EventSet)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(4);
     }
 
     if ((retval=PAPI_assign_eventset_component(PAPI_EventSet, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component: %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(5);
     }
 
     if((retval=PAPI_set_multiplex(PAPI_EventSet)) != PAPI_OK){
         fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(6);
     }
 
 }
@@ -81,11 +80,11 @@ void set_option(){
     PAPI_domain_option_t domain_opt;
     domain_opt.def_cidx = 0;
     domain_opt.eventset = PAPI_EventSet;
-    domain_opt.domain = PAPI_DOM_USER;
+    domain_opt.domain = PAPI_DOM_ALL;
 
     if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
         fprintf(stderr, "PAPI error: Setting domain : %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(7);
     }
 
     PAPI_granularity_option_t gran_opt;
@@ -95,7 +94,7 @@ void set_option(){
 
     if((retval = PAPI_set_opt(PAPI_GRANUL, (PAPI_option_t*)&gran_opt)) != PAPI_OK){
         fprintf(stderr, "PAPI error: Setting granularity : %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(8);
     }
 
 	PAPI_cpu_option_t cpu_opt;
@@ -105,41 +104,42 @@ void set_option(){
 	if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
 		fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
         fprintf(stderr, "Make sure you run this program as root!\n");
-		exit(-1);
+		exit(9);
 	}
+}
 
+void add_events(){
+    int retval;
     //L1 Cache miss
     if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L1_DCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L1 DCM to event set: %s.\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(10);
     }
     if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L1_ICM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L1 ICM to event set: %s.\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(11);
     }
     //L2 Cache miss
     if((retval=PAPI_add_event(PAPI_EventSet, PAPI_L2_DCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L2 DCM to event set: %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(12);
     }
     if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L2_ICM)) != PAPI_OK){
        fprintf(stderr, "PAPI error: can't add L2 ICM to event set: %s.\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(13);
     }
 
     //L3 Total cache miss
     if((retval=PAPI_add_event(PAPI_EventSet, PAPI_L3_TCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L3 TCM to event set: %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(14);
     }
     
     if(PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add TOT CYC to event set: %s\n", PAPI_strerror(retval));
-        exit(-1);
+        exit(15);
     
     }
-
-
 }
 
 int main (int argc, char ** argv) {
@@ -147,10 +147,10 @@ int main (int argc, char ** argv) {
 	pid_t rt_child;
 
     check_arguments(argc, argv);
+    //PAPI initilization
     check_papi();
-
     set_option();
-
+    add_events();
 /**********************************************************************************************/
     //Child executes the RT task in one core		
 	if((rt_child = fork())==0){
@@ -166,52 +166,52 @@ int main (int argc, char ** argv) {
         s_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 	    if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
             fprintf(stderr, "Sched error: set affinity\n");
-            exit(10);
+            exit(16);
         }
         if(sched_setscheduler(getpid(), SCHED_FIFO, &s_param)){
             fprintf(stderr, "Sched error: sched_setscheduler\n");
-            exit(10);
+            exit(17);
         }
 
 	    execl(argv[1], "RT task", argv[2], NULL);
         
     }else if(rt_child == -1){
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
-		exit(4);
+		exit(16);
 /**********************************************************************************************/
 	}else{
 
         if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
-            exit(3);
+            exit(16);
         }
         
         wait(NULL);
 
         if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
-            exit(4);
+            exit(17);
         }
 
         if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
-            exit(4);
+            exit(18);
         }
 
         print_counters(papi_values);
         
         if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
-            exit(5);
+            exit(19);
         }
 
         if((ret=PAPI_destroy_eventset(&PAPI_EventSet))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
-            exit(6);
+            exit(20);
         }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void print_help(){

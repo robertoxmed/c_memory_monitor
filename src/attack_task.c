@@ -1,84 +1,118 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include "../include/attack_task.h"
 
-int fd;
+void attack_list_init ( attack_list *al ){
 
-int attaquant_write(int tempo){
-
-    int ite=0;
-    while(ite != tempo){
-        srand(getpid()+ite);
-
-        printf("Writing in tests/attaquant.txt : %d\n", ite);
-
-        if(write(fd, &ite, sizeof(int)) == -1){
-            perror("write");
-            exit(1);
-        }
-
-        //lseek(fd, (off_t)((float)rand()/ 100), SEEK_CUR);
-
-        ite++;
-    }
-    return 0;
+    al->al_nb_elements = 0;
+    al->al_head = NULL;
+    al->al_tail = NULL;
 }
 
-int attaquant_seek(int tempo){
-
-    int tmp;
-    int ite = 0, status;
-    struct stat buf;
-
-    status = fstat(fd, &buf);
-    if(status == -1){
-        perror("stat");
-        return 1;
+void attack_list_destroy ( attack_list *al ){
+    attack_element *tmp;
+    tmp = al->al_head;
+    while(tmp->ae_next != NULL){
+        al->al_head = tmp->ae_next;
+        free(tmp);
+        tmp = al->al_head;
     }
-
-    while(ite != tempo){
-        
-        srand(getpid()+ite);
-
-        lseek(fd, (off_t)((float)rand()/ buf.st_size), SEEK_SET);
-
-        if(read(fd, &tmp, sizeof(int))==-1){
-            perror("read");
-            return 1;
-        }
-        printf("Read from tests/attaquant.txt %d\n", tmp);
-        ite++;
-    }
-    return 0;
+    free(al);
 }
 
-int main(int argc, char* argv[]){
+void attack_element_init(attack_element *ae){
+    int i,j;
+    for(i=0;i<SIZE;i++){
+        srand(i);
+        for(j=0;j<SIZE;j++){
+            ae->ae_mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
+        }
+    }
+    ae->ae_next = NULL;
+    ae->ae_previous = NULL;
+}
 
-    int res;
+void attack_list_add_elt(attack_list *al, attack_element *ae){
+    if(al == NULL || ae == NULL){
+        fprintf(stderr, "Attack list or element not initialized\n");
+        exit(1);
+    }
+    if(al->al_nb_elements == 0){ //First element added => head of the list
+        al->al_head = ae;
+        al->al_tail = ae;
+        ae->ae_next = NULL;
+        ae->ae_previous = NULL;
+        al->al_index[al->al_nb_elements ++] = ae;
+    }else{ //Chain elements
+        al->al_tail->ae_next = ae;
+        ae->ae_previous = al->al_tail;
+        al->al_tail = ae;
+        al->al_index[al->al_nb_elements ++] = ae;
+    }
+}
 
-    if (argc != 3){
-        printf("Usage: %s <nb iteration> <option>\n", argv[0]);
-        return(EXIT_FAILURE);
+void attack_list_add_n_elt(attack_list *al){
+    int i;
+    for(i=0;i<INDEX_SIZE;i++){
+        attack_element *ae = (attack_element*)malloc(sizeof(attack_element));
+        attack_element_init(ae);
+        attack_list_add_elt(al, ae);
+    }
+}
+
+void attack_element_print(attack_element *ae){
+    int i, j;
+    printf("-----------------\n");
+    for(i=0;i<SIZE;i++){
+        for(j=0;j<SIZE;j++){
+            printf("%g ",ae->ae_mat[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+}
+
+void attack_list_iterate(attack_list *al){
+    int j=0;
+    attack_element *iter;
+    while(j != 20000){
+        for(iter = al->al_head; iter; iter = iter->ae_next){
+            attack_element_print(iter);
+        }
+        j++;
+    }
+}
+
+void attack_list_rand_iterate(attack_list *al){
+    int i, j =0;
+    while(j != 20000){
+        srand(getpid()+i);
+        i = (int)(rand()/al->al_nb_elements);
+        attack_element_print(al->al_index[i]);
+        j++;
+    }
+}
+
+
+int main(int argc, char **argv){
+    attack_list *al = (attack_list*)malloc(sizeof(attack_list));
+    al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
+    attack_list_init(al);
+    //printf("Al->nb_elts %d\n", al->al_nb_elements);
+    attack_list_add_n_elt(al);
+    //printf("Al->nb_elts %d\n", al->al_nb_elements);
+
+    if(argc == 2){
+        if(atoi(argv[1]) == 1){
+            printf("Attacker will use random iteration\n");
+            attack_list_rand_iterate(al);
+        }
+    }else{
+        printf("Attacker will use linear iteration\n");
+        attack_list_iterate(al);
     }
 
-    if((fd = open("./tests/attaquant.txt", O_RDWR, 0600))== -1){
-        perror("open");
-        return(EXIT_FAILURE);
-    }
+    attack_list_destroy(al);
 
-    if (atoi(argv[2]) == 0)
-        res = attaquant_write(atoi(argv[1]));
-    else
-        res = attaquant_seek(atoi(argv[1]));
 
-    if (res){
-        printf("error during the attack\n");
-        return(EXIT_FAILURE);
-    }
-
-    close(fd);
-
-    return 0;
+    return EXIT_SUCCESS;
 }
