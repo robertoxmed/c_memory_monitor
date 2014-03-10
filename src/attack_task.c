@@ -19,9 +19,8 @@ void attack_list_destroy ( attack_list *al ){
 }
 
 void attack_element_init(attack_element *ae){
-    int i,j;
+    int i,j =0;
     for(i=0;i<SIZE;i++){
-        srand(i);
         for(j=0;j<SIZE;j++){
             ae->ae_mat[i][j] = (int) (10*(float)rand()/ RAND_MAX);
         }
@@ -52,6 +51,7 @@ void attack_list_add_elt(attack_list *al, attack_element *ae){
 void attack_list_add_n_elt(attack_list *al){
     int i;
     for(i=0;i<INDEX_SIZE;i++){
+        srand(i);
         attack_element *ae = (attack_element*)malloc(sizeof(attack_element));
         attack_element_init(ae);
         attack_list_add_elt(al, ae);
@@ -72,21 +72,18 @@ void attack_element_print(attack_element *ae){
 }
 
 void attack_list_iterate(attack_list *al){
-    int j=0;
     attack_element *iter;
-    while(j != 20000){
-        for(iter = al->al_head; iter; iter = iter->ae_next){
-            attack_element_print(iter);
-        }
-        j++;
+    for(iter = al->al_head; iter; iter = iter->ae_next){
+        attack_element_print(iter);
     }
 }
 
 void attack_list_rand_iterate(attack_list *al){
     int i, j =0;
-    while(j != 20000){
+    while(j != INDEX_SIZE){
         srand(getpid()+i);
-        i = (int)(rand()/al->al_nb_elements);
+        i = (int)(rand()%al->al_nb_elements);
+        printf("I = %d\n", i);
         attack_element_print(al->al_index[i]);
         j++;
     }
@@ -97,17 +94,24 @@ int main(int argc, char **argv){
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
     attack_list_init(al);
-    //printf("Al->nb_elts %d\n", al->al_nb_elements);
+    fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
     attack_list_add_n_elt(al);
-    //printf("Al->nb_elts %d\n", al->al_nb_elements);
+    fprintf(stderr, "Allocation done: Al->nb_elts %d\n", al->al_nb_elements);
+    sleep(2);
 
     if(argc == 2){
         if(atoi(argv[1]) == 1){
-            printf("Attacker will use random iteration\n");
+            fprintf(stderr, "Attacker will use random iteration\n");
+            sleep(3);
             attack_list_rand_iterate(al);
+        }else{
+            fprintf(stderr, "Attacker will use linear iteration\n");
+            sleep(3);
+            attack_list_iterate(al);
         }
     }else{
-        printf("Attacker will use linear iteration\n");
+        fprintf(stderr, "Attacker will use linear iteration\n");
+        sleep(3);
         attack_list_iterate(al);
     }
 
