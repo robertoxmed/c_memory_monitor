@@ -15,7 +15,7 @@ TAR = PSAR
 all: bin/rt_task bin/attaquant_task bin/papi_wrapper bin/attack_task bin/rt_task2
 
 bin/papi_wrapper: obj/papi_wrapper.o
-	$(CC) $(CFLAGS) $< $(PAPI_LIB) -o $@
+	$(CC) $(CFLAGS) $< $(PAPI_LIB) -o $@ -lrt
 
 obj/papi_wrapper.o: src/papi_wrapper.c
 	$(CC) $(CFLAGS) -I $(INC) -c $< -o $@

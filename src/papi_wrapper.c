@@ -134,11 +134,9 @@ void add_events(){
         fprintf(stderr, "PAPI error: can't add L3 TCM to event set: %s\n", PAPI_strerror(retval));
         exit(14);
     }
-    
-    if(PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't add TOT CYC to event set: %s\n", PAPI_strerror(retval));
+    if((retval = PAPI_add_event(PAPI_EventSet, PAPI_L3_TCA)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add L3 TCA to event set %s\n", PAPI_strerror(retval));
         exit(15);
-    
     }
 }
 
@@ -179,6 +177,7 @@ int main (int argc, char ** argv) {
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(16);
 /**********************************************************************************************/
+    //The wrapper        
 	}else{
 
         if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
@@ -231,13 +230,13 @@ void print_counters(long long *values){
     printf("Results:\n");
     printf("============================================\n");
     printf("L1 data cache miss %lld.\n", values[0]);
-    printf("L1 instruction cache miss %lld.\n", values[1]);
+    printf("L1 instruction cache miss %lld.\n\n", values[1]);
     printf("L2 data cache miss %lld.\n", values[2]);
     printf("L2 instruction cache miss %lld.\n", values[3]);
+    printf("=> L2 cache data hit rate %2.3f\n\n", (1.0 - ((double)values[2]/(double)values[0])) * 100);
     printf("L3 total cache miss %lld.\n", values[4]);
-    printf("Total cycles %lld.\n", values[5]);
-    printf("Cache miss percent : %2.3f\n", 
-        (((double)values[0]+(double)values[1]+(double)values[2]+(double)values[3]+(double)values[4])/(double)values[5])*100);
+    printf("L3 total cache access %lld.\n", values[5]);
+    printf("=> L3 cache hit rate %2.3f\n", ((double)values[4]/(double)values[5]) * 100);
     printf("============================================\n");
     printf("PAPI Wrapper End \n");
     printf("============================================\n");
