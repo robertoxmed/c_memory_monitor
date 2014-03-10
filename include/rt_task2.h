@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define SIZE 4096
+#define SIZE 32768
 
 //Initialise les deux tableaux
 void rt_task_init(int[SIZE], int[SIZE]);

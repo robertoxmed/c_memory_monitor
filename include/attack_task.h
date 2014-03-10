@@ -8,7 +8,7 @@
 #include <time.h>
 
 #define SIZE 3
-#define INDEX_SIZE 400000
+#define INDEX_SIZE 4000000
 
 struct attack_element_t{
 	double ae_mat[SIZE][SIZE];

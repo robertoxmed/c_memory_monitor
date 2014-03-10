@@ -79,13 +79,21 @@ void attack_list_iterate(attack_list *al){
 }
 
 void attack_list_rand_iterate(attack_list *al){
-    int i, j =0;
-    while(j != INDEX_SIZE){
+    int i, j =0, k, cpt = 0;;
+    while(j != 95000){
         srand(getpid()+i);
         i = (int)(rand()%al->al_nb_elements);
-        printf("I = %d\n", i);
-        attack_element_print(al->al_index[i]);
+        k = (int)(rand()%10) + 1;
+        printf("I = %d, K = %d\n", i, k);
+
+        attack_element *iter = al->al_index[i];
+        while((cpt != k) && (iter != NULL)){
+            attack_element_print(iter);
+            iter = iter->ae_next;
+            cpt++;
+        }
         j++;
+        cpt = 0;
     }
 }
 
