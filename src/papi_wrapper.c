@@ -4,10 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sched.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 
 //Global values used for the timer
-long long papi_values[6];
+long long papi_values[7];
 int PAPI_EventSet = PAPI_NULL;
 
 void print_help();
@@ -68,7 +69,6 @@ void check_papi(){
         fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
         exit(6);
     }
-
 }
 
 //Setting the granularity of the PAPI event set.
@@ -138,6 +138,11 @@ void add_events(){
         fprintf(stderr, "PAPI error: can't add L3 TCA to event set %s\n", PAPI_strerror(retval));
         exit(15);
     }
+
+    if((retval = PAPI_add_event(PAPI_EventSet, PAPI_TOT_CYC)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't add TOT CYC to event set %s\n", PAPI_strerror(retval));
+        exit(16);
+    }
 }
 
 int main (int argc, char ** argv) {
@@ -185,7 +190,14 @@ int main (int argc, char ** argv) {
             exit(16);
         }
         
+        struct timeval  tv1, tv2;
+        gettimeofday(&tv1, NULL);
         wait(NULL);
+        gettimeofday(&tv2, NULL);
+
+        printf ("\nTotal time = %f seconds\n",
+                 (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+                 (double) (tv2.tv_sec - tv1.tv_sec));
 
         if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
@@ -236,7 +248,8 @@ void print_counters(long long *values){
     printf("=> L2 cache data hit rate %2.3f\n\n", (1.0 - ((double)values[2]/(double)values[0])) * 100);
     printf("L3 total cache miss %lld.\n", values[4]);
     printf("L3 total cache access %lld.\n", values[5]);
-    printf("=> L3 cache hit rate %2.3f\n", ((double)values[4]/(double)values[5]) * 100);
+    printf("=> L3 cache hit rate %2.3f\n\n", ((double)values[4]/(double)values[5]) * 100);
+    printf("Total cycles %lld\n", values[6]);
     printf("============================================\n");
     printf("PAPI Wrapper End \n");
     printf("============================================\n");
