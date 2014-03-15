@@ -1,4 +1,5 @@
 #include "../include/attack_task.h"
+#include "../include/papi_hypervisor.h"
 
 void attack_list_init ( attack_list *al ){
 

@@ -1,18 +1,7 @@
-#include <papi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sched.h>
-#include <sys/time.h>
-#include <sys/wait.h>
+#include "../include/papi_hypervisor.h"
 
-//Global values used for the timer
 long long papi_values[7];
 int PAPI_EventSet = PAPI_NULL;
-
-void print_help();
-void print_counters(long long *values);
 
 void check_arguments (int argc, char ** argv){
     if(argc == 2 && (strcmp(argv[1], "-h")==0 || strcmp(argv[1], "--help")==0)){

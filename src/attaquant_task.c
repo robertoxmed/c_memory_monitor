@@ -73,7 +73,6 @@ int attaquant_seek(int tempo){
     fclose(fic);
 
     return 0;
-
 }
 
 

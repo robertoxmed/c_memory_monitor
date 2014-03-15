@@ -1,4 +1,5 @@
 #include "../include/rt_task2.h"
+#include "../include/papi_hypervisor.h"
 
 
 void rt_task_init(int tab_1[SIZE], int tab_2[SIZE]){
