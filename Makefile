@@ -12,18 +12,21 @@ CC=gcc -Wall -g
 INC=include
 TAR = PSAR
 
-all: bin/papi_hypervisor bin/attaquant_task bin/papi_wrapper bin/attack_task bin/rt_task2
+all: bin/papi_hypervisor bin/attaquant_task bin/attack_task bin/rt_task2 bin/papi_wrapper
 
-bin/papi_wrapper: obj/papi_wrapper.o
-	$(CC) $(CFLAGS) $< $(PAPI_LIB) -o $@
+obj/papi_util.o: src/papi_util.c
+	$(CC) -I $(INC) -c $< -o $@
 
-obj/papi_wrapper.o: src/papi_wrapper.c $(INC)/papi_hypervisor.h
+bin/papi_hypervisor: obj/papi_hypervisor.o obj/papi_util.o
+	$(CC) $(CFLAGS) obj/papi_hypervisor.o obj/papi_util.o $(PAPI_LIB) -o $@ -lrt
+
+obj/papi_hypervisor.o: src/papi_hypervisor.c $(INC)/papi_util.h
 	$(CC) $(CFLAGS) -I $(INC) -c $< -o $@
 
-bin/papi_hypervisor: obj/papi_hypervisor.o obj/papi_wrapper.o
-	$(CC) $(CFLAGS) obj/papi_hypervisor.o obj/papi_wrapper.o $(PAPI_LIB) -o $@ -lrt
+bin/papi_wrapper: obj/papi_wrapper.o obj/papi_util.o
+	$(CC) $(CFLAGS) obj/papi_wrapper.o obj/papi_util.o $(PAPI_LIB) -o $@
 
-obj/papi_hypervisor.o: src/papi_hypervisor.c $(INC)/papi_hypervisor.h
+obj/papi_wrapper.o: src/papi_wrapper.c $(INC)/papi_util.h
 	$(CC) $(CFLAGS) -I $(INC) -c $< -o $@
 
 bin/rt_task: obj/rt_task.o
