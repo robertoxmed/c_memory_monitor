@@ -19,7 +19,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
         rt_quota_l1 -= papi_values[0];
         if(rt_quota_l1 <= 0){
             for(i=0; i<nb_attackers; i++)
-                kill(SIGSTOP, pid_attacker[i]);
+                kill(pid_attacker[i],SIGSTOP);
         }
 
         new_window --;
@@ -49,6 +49,8 @@ int main (int argc, char ** argv) {
     check_papi();
     set_option();
     add_events();
+
+    pid_hypervisor = getpid();
 
     //Timer initialization and sigaction
     sa.sa_flags = SA_SIGINFO;

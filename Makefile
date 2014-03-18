@@ -12,7 +12,7 @@ CC=gcc -Wall -g
 INC=include
 TAR = PSAR
 
-all: bin/papi_hypervisor bin/attaquant_task bin/attack_task bin/rt_task2 bin/papi_wrapper
+all: bin/papi_hypervisor bin/attack_task bin/rt_task2 bin/papi_wrapper
 
 obj/papi_util.o: src/papi_util.c
 	$(CC) -I $(INC) -c $< -o $@
@@ -41,17 +41,11 @@ bin/rt_task2: obj/rt_task2.o
 obj/rt_task2.o: src/rt_task2.c
 	$(CC) -c -o $@ $^
 
-bin/attaquant_task: obj/attaquant_task.o
-	$(CC) -o $@ $^
+bin/attack_task: obj/attack_task.o obj/papi_util.o
+	$(CC) -o $@ obj/attack_task.o obj/papi_util.o $(PAPI_LIB)
 
-obj/attaquant_task.o: src/attaquant_task.c
-	$(CC) -c -o $@ $^
-
-bin/attack_task: obj/attack_task.o
-	$(CC) -o $@ $^
-
-obj/attack_task.o: src/attack_task.c
-	$(CC) -c -o $@ $^
+obj/attack_task.o: src/attack_task.c include/papi_util.h
+	$(CC)  $(CFLAGS) -I $(INC) -c src/attack_task.c -o $@
 
 tar:
 	tar -cvf - ../$(TAR) | gzip >../$(TAR).tgz

@@ -12,7 +12,7 @@ int main (int argc, char ** argv) {
 /**********************************************************************************************/
     //Child executes the RT task in one core		
 	if((rt_child = fork())==0){
-
+        int stdin_fd = -1;
 		cpu_set_t mask;
         struct sched_param s_param;
 
@@ -20,6 +20,13 @@ int main (int argc, char ** argv) {
         //Using only one CPU with max priority
 	    CPU_ZERO(&mask);
 	    CPU_SET(1, &mask);
+
+        stdin_fd = open("/dev/null", O_RDONLY);
+        if (stdin_fd == -1)
+            exit(127);
+        dup2(stdin_fd, 1);
+        dup2(stdin_fd, 2);
+        close(stdin_fd);
 
         s_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
 	    if(sched_setaffinity(getpid(), sizeof(mask), &mask)){

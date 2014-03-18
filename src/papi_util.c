@@ -2,6 +2,7 @@
 
 long long papi_values[7];
 int PAPI_EventSet = PAPI_NULL;
+pid_t pid_hypervisor = -1;
 pid_t pid_attacker[3] = {-1, -1, -1};
 int nb_attackers = 0;
 

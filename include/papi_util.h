@@ -10,10 +10,15 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 
 extern int nb_attackers;
 extern pid_t pid_attacker[3];
+extern pid_t pid_hypervisor;
 
 extern long long papi_values[7];
 extern int PAPI_EventSet;

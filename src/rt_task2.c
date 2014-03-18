@@ -27,8 +27,9 @@ void rt_task_treatement(int tab_1[SIZE],int tab_2[SIZE], int i){
   }
   
   else{
+    
     printf("valeur lue dans tab_2[%d]: %d\n", tab_rand, tab_2[tab_rand]);
-    }
+  }
 }
  
 
