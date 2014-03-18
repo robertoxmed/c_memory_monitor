@@ -89,7 +89,7 @@ void attack_list_rand_iterate(attack_list *al){
 
         attack_element *iter = al->al_index[i];
         while((cpt != k) && (iter != NULL)){
-            //attack_element_print(iter);
+            attack_element_print(iter);
             iter = iter->ae_next;
             cpt++;
         }

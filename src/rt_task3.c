@@ -1,5 +1,4 @@
 #include "../include/attack_task.h"
-#include "../include/papi_hypervisor.h"
 
 void attack_list_init ( attack_list *al ){
 
@@ -106,21 +105,17 @@ int main(int argc, char **argv){
     fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
     attack_list_add_n_elt(al);
     fprintf(stderr, "Allocation done: Al->nb_elts %d\n", al->al_nb_elements);
-    sleep(2);
 
     if(argc == 2){
         if(atoi(argv[1]) == 1){
             fprintf(stderr, "Attacker will use random iteration\n");
-            sleep(3);
             attack_list_rand_iterate(al);
         }else{
             fprintf(stderr, "Attacker will use linear iteration\n");
-            sleep(3);
             attack_list_iterate(al);
         }
     }else{
         fprintf(stderr, "Attacker will use linear iteration\n");
-        sleep(3);
         attack_list_iterate(al);
     }
 
