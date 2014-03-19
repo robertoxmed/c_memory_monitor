@@ -76,11 +76,11 @@ Introduction
 \end_layout
 
 \begin_layout Itemize
-description du sujet
+Description du sujet
 \end_layout
 
 \begin_layout Itemize
-problématique
+Problématique
 \end_layout
 
 \begin_layout Itemize
@@ -88,64 +88,61 @@ Objectif (cf.
  Pré-rapport)
 \end_layout
 
+\begin_layout Section
+Description de l'architecture matérielle pour les tests
+\end_layout
+
 \begin_layout Itemize
-plan
+Intel Core i3-330M Processor (2.13 GHz, 3 MB L3 Cache)
 \end_layout
 
 \begin_layout Section
-Description de l'architecture sur lequel on a fait nos test
+Description des programmes utilisant PAPI
+\end_layout
+
+\begin_layout Itemize
+Événements mesurés (options ajoutées pour un seul coeur, granularité, domaine...)
+\end_layout
+
+\begin_layout Itemize
+Fonctionnement du wrapper
+\end_layout
+
+\begin_layout Itemize
+Fonctionnement de l'hyperviseur
 \end_layout
 
 \begin_layout Section
-Description de l'utilisation de PAPI
+Les différentes tâches (attaquantes, temps réel)
 \end_layout
 
 \begin_layout Itemize
-structure
-\end_layout
-
-\begin_layout Itemize
-fontcions utilisées 
-\end_layout
-
-\begin_layout Itemize
-...
-\end_layout
-
-\begin_layout Section
-Les différentes tâches (attaquantes, temps réel, hyperviseur)
-\end_layout
-
-\begin_layout Itemize
-description des 3 tâches 
+Description des 2 tâches, leur impact sur la mémoire.
 \end_layout
 
 \begin_layout Itemize
 
 \emph on
-evolution des choix
+Evolution des choix.
 \end_layout
 
 \begin_layout Section
 Résultats et analyses
 \end_layout
 
-\begin_layout Standard
+\begin_layout Itemize
 
 \emph on
-Evolution des résultats avec les évolutions de codes?
+Evolution des résultats avec les évolutions de codes? En fonction du gouverneur
+ CPU.
+\end_layout
+
+\begin_layout Itemize
+Différences des résultats avec pre-fetching.
 \end_layout
 
 \begin_layout Section
-Conclusion 
-\begin_inset Quotes eld
-\end_inset
-
-et ouverture
-\begin_inset Quotes erd
-\end_inset
-
-
+Conclusion et ouverture
 \end_layout
 
 \end_body
