@@ -100,6 +100,16 @@ void attack_list_rand_iterate(attack_list *al){
 
 
 int main(int argc, char **argv){
+
+    cpu_set_t mask;
+
+    CPU_ZERO(&mask);
+    CPU_SET(2, &mask);
+
+    if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
+        fprintf(stderr, "Sched error: set affinity\n");
+        exit(16);
+    }
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
     

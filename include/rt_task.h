@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <sched.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define SIZE 32768
 

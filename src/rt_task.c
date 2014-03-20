@@ -1,107 +1,55 @@
 #include "../include/rt_task.h"
 
-void rt_task_init(rt_list *list){
+void rt_task_init(int tab_1[SIZE], int tab_2[SIZE]){
 
-    rt_element *op_1 = NULL;
-    rt_element *op_2 = NULL;    
-    int i,j;
-
-    op_1 = (rt_element *)malloc(sizeof(rt_element));
-    op_2 = (rt_element *)malloc(sizeof(rt_element));
-
-    if (!op_1 || !op_2){
-        printf("Erreur allocation mémoire\n");
-        exit(EXIT_FAILURE);
-    }
-
-    /*Remplir deux matrices initiales*/
-    for (i=0; i<SIZE; i++){
-        for (j=0; j<SIZE; j++){
-            srand(getpid()+i+j);
-            if(j%2==0){
-                op_2->mat[i][j] = j;
-                op_1->mat[i][j] = i;
-            }else {
-                op_2->mat[i][j] = i;
-                op_1->mat[i][j] = j;
-            }
-        }
-    }
-
-    list->head = op_1;
-    list->op1 = op_1;
-    list->op1->next = op_2;
-    list->op2 = op_2;
-    list->op2->next = NULL;
+  int i=0;
+  
+  srand(time(NULL));
+  for (i=0; i<SIZE; i++){
+    tab_1[i] =  (int) (10*(float)rand()/ RAND_MAX);
+    tab_2[i] =  (int) (10*(float)rand()/ RAND_MAX);
+  }
 }
 
-void rt_task_nextiter(rt_list *list){
-    /*Calcul matriciel*/
-    int i,j,k = 0;
-    rt_element *res = NULL;
-    
-    res = (rt_element *)malloc(sizeof(rt_element));
-    if (!res){
-        printf("Erreur allocation mémoire\n");
-        exit(EXIT_FAILURE);
-    }
+void rt_task_treatement(int tab_1[SIZE],int tab_2[SIZE], int i){
 
-    /*Produit matriciel*/
-    for (i=0; i<SIZE; i++){
-        for (j=0; j<SIZE; j++){
-            res->mat[i][j]=0; 
-            for (k=0;k<SIZE;k++){ 
-                res->mat[i][j] += list->op1->mat[i][k] *  list->op2->mat[k][j]; 
-            }
-        }
-    }
+  int decision, tab_rand;
+  
+  srand(i);
+  decision = rand();
+  tab_rand = rand()%SIZE;
+ 
+  printf("--------------------\n");
+  printf("valeur de decision %d \n", decision);
     
-    /*for (i=0; i<SIZE; i++){
-        for (j=0; j<SIZE; j++){
-            printf("%d ",res->mat[i][j]);
-        }
-        printf("\n");
-    }*/
+  if(decision < (RAND_MAX/2)){
+    printf("valeur lue dans tab_1[%d]: %d\n", tab_rand, tab_1[tab_rand]);
+  }
+  
+  else{
     
-    res->next = NULL;
-    list->op2->next = res;
-    list->op1 = list->op1->next;
-    list->op2 = list->op2->next;
-    
-    //printf("----------------\n");
+    printf("valeur lue dans tab_2[%d]: %d\n", tab_rand, tab_2[tab_rand]);
+  }
 }
-
-void rt_task_destroy(rt_list *list){
-    rt_element *p;
-
-    p = list->head;
-
-    while(p->next){
-        list->head = p->next;
-        free(p);
-        p = list->head;
-    }
-    free(list);
-}
+ 
 
 int main(int argc, char* argv[]){
-    
-    rt_list *the_list = NULL;
-    int i = 0;
-    if(argc!= 2){
-        fprintf(stderr, "Usage: %s <nb iterations>\n", argv[0]);
-        exit(1);
-    }
+  if (argc!=2){
+    fprintf(stderr, "Usage: %s <nb iterations>\n", argv[0]);
+    exit(1); 
+  }
 
-    the_list = (rt_list*)malloc(sizeof(rt_list));
+  int tab_1[SIZE];
+  int tab_2[SIZE];
+  int nb_iter = atoi(argv[1]), i=0;
 
-    rt_task_init(the_list);
+  rt_task_init(tab_1, tab_2);
 
-    while( i != atoi(argv[1])){
-        rt_task_nextiter(the_list);
-        i++;
-    }
-    rt_task_destroy(the_list);
+  while (i!=nb_iter){
+    rt_task_treatement(tab_1,tab_2,i);
+    i++;
+  }
+ 
+  return 0;
 
-    return 0;
 }
