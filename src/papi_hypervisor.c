@@ -8,32 +8,32 @@ long long at_quota_l1 = CACHE_QUOTA;
 int new_window = 5; // <= How many times the handler will decrement before the new window
 
 void timer_handler(int signo, siginfo_t *info, void *context){
-    int i, ret;
-    if(signo == SIGRTMIN){ //Signal send by the timer => Check quota
-        //Read the values with PAPI
-        if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
-            fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
-            exit(20);
-        }
-        //Test the quota and send the sigstop
-        rt_quota_l1 -= papi_values[0];
-        if(rt_quota_l1 <= 0){
-            for(i=0; i<nb_attackers; i++)
-                kill(pid_attacker[i],SIGSTOP);
-        }
+	int i, ret;
+	if(signo == SIGRTMIN){ //Signal send by the timer => Check quota
+		//Read the values with PAPI
+		if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
+			fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
+			exit(20);
+		}
+		//Test the quota and send the sigstop
+		rt_quota_l1 -= papi_values[0];
+		if(rt_quota_l1 <= 0){
+			for(i=0; i<nb_attackers; i++)
+				kill(pid_attacker[i],SIGSTOP);
+		}
 
-        new_window --;
-        //If new window send SIGCONT to attackers
-        /*
-        if(!new_window){
-            for(i=0; i<nb_attackers; i++)
-                kill(pid_attacker[i], SIGCONT);
-            new_window = 5;
-            rt_quota_l1 = CACHE_QUOTA;
-            at_quota_l1 = CACHE_QUOTA;
-        }
-        */
-    }
+		new_window --;
+		//If new window send SIGCONT to attackers
+		/*	
+		   if(!new_window){
+			   for(i=0; i<nb_attackers; i++)
+				   kill(pid_attacker[i], SIGCONT);
+			   new_window = 5;
+			   rt_quota_l1 = CACHE_QUOTA;
+			   at_quota_l1 = CACHE_QUOTA;
+		   }
+ 		*/	
+	}
 }
 
 int main (int argc, char ** argv) {

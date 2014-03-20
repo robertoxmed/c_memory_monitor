@@ -46,6 +46,7 @@ int main (int argc, char ** argv) {
 /**********************************************************************************************/
     //The wrapper        
 	}else{
+        sleep(1);
 
         if((ret = PAPI_start(PAPI_EventSet)) != PAPI_OK){
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
@@ -54,12 +55,8 @@ int main (int argc, char ** argv) {
         
         struct timeval  tv1, tv2;
         gettimeofday(&tv1, NULL);
-        wait(NULL);
-        gettimeofday(&tv2, NULL);
-
-        printf ("\nTotal time = %f seconds\n",
-                 (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-                 (double) (tv2.tv_sec - tv1.tv_sec));
+        
+        sleep(8);
 
         if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
@@ -70,6 +67,13 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
             exit(18);
         }
+
+        wait(NULL);
+        gettimeofday(&tv2, NULL);
+
+        printf ("\nTotal time = %f seconds\n",
+                 (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+                 (double) (tv2.tv_sec - tv1.tv_sec));
 
         print_counters(papi_values);
         
