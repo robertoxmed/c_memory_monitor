@@ -111,7 +111,6 @@ int main(int argc, char **argv){
     //Notify the hypervisor
     kill(getppid(), SIGCONT);
 
-
     if(argc == 2){
         if(atoi(argv[1]) == 1){
             fprintf(stderr, "Attacker will use random iteration\n");

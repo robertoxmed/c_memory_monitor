@@ -1,6 +1,6 @@
 #include "../include/papi_util.h"
 
-#define CACHE_QUOTA 1280000
+#define CACHE_QUOTA 1800000
 #define ITERATION_MODE "1"
 #define NB_RT_ITERATION "20000000"
 
@@ -20,14 +20,12 @@ void timer_handler(int signo, siginfo_t *info, void *context){
     		fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
     		exit(20);
     	}
-        fprintf(stderr, "L3 = %lld\n", hypervisor_value);
-
     	//Test the quota and send the sigstop
+        fprintf(stderr, "%lld\n", hypervisor_value);
     	rt_quota_l3 -= hypervisor_value;
-        fprintf(stderr, "QUOTA = %lld ATTACKERS = %d\n", rt_quota_l3, pid_attacker[0]);
 
     	if((rt_quota_l3 <= 0) && (send == 0)){
-            fprintf(stderr, "QUOTA EXCEEDED will stop attackers\n");
+            fprintf(stderr, "Quota exceeded will stop attackers\n");
     		for(i=0; i<nb_attackers; i++)
     			kill(pid_attacker[i],SIGSTOP);
             send = 1;
@@ -37,7 +35,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
 
     	//If new window send SIGCONT to attackers
         if(!new_window){
-            fprintf(stderr, "NEW WINDOW\n");
+            fprintf(stderr, "New window\n");
             for(i=0; i<nb_attackers; i++)
         	   kill(pid_attacker[i], SIGCONT);
             new_window = 5;
