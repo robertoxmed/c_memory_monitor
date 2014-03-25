@@ -100,27 +100,17 @@ void attack_list_rand_iterate(attack_list *al){
 
 
 int main(int argc, char **argv){
-    cpu_set_t mask;
-
-    CPU_ZERO(&mask);
-    CPU_SET(3, &mask);
-
-    if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
-        fprintf(stderr, "Sched error: set affinity\n");
-        exit(16);
-    }
 
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
-    
-    //Add the process to the table used by the hypervisor
-    pid_attacker[nb_attackers++] = getpid();
-    
+        
     attack_list_init(al);
-    fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
     attack_list_add_n_elt(al);
     fprintf(stderr, "Allocation done: Al->nb_elts %d\n", al->al_nb_elements);
-    sleep(2);
+
+    //Notify the hypervisor
+    kill(getppid(), SIGCONT);
+
 
     if(argc == 2){
         if(atoi(argv[1]) == 1){

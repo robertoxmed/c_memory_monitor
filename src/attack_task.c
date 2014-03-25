@@ -113,9 +113,7 @@ int main(int argc, char **argv){
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
     
-    //Add the process to the table used by the hypervisor
-    pid_attacker[nb_attackers++] = getpid();
-    
+    //Add the process to the table used by the hypervisor    
     attack_list_init(al);
     fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
     attack_list_add_n_elt(al);

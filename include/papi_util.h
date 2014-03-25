@@ -14,20 +14,25 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
-
-extern int nb_attackers;
-extern pid_t pid_attacker[3];
-extern pid_t pid_hypervisor;
+extern int hypervisor_eventset;
+extern long long hypervisor_value; //The number of memory accesses
 
 extern long long papi_values[7];
 extern int PAPI_EventSet;
 
-extern void check_papi();
-extern void check_arguments();
-extern void print_help();
-extern void print_counters(long long *values);
-extern void set_option();
-extern void add_events();
+void check_papi();
+void check_arguments(int argc, char **argv);
+void print_help();
+void print_counters(long long *values);
+void set_option();
+void add_events();
+
+void check_hypervisor_arguments(int argc, char **argv);
+void print_hypervisor_help();
+void init_papi_hypervisor();
+void set_option_hypervisor();
+void add_event_hypervisor();
+void print_counters_hypervisor(long long *values);
+
 
 #endif
