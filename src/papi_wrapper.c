@@ -1,14 +1,15 @@
 #include "../include/papi_util.h"
 
 int main (int argc, char ** argv) {
-    int ret;
-	pid_t rt_child;
+  int ret;
+  pid_t rt_child;
+  /*long long histogram[3]; Tableau de valeurs*/
 
     check_arguments(argc, argv);
-    //PAPI initilization
-    check_papi();
-    set_option();
-    add_events();
+  //PAPI initilization
+  check_papi();
+  set_option();
+  add_events();
 /**********************************************************************************************/
     //Child executes the RT task in one core		
 	if((rt_child = fork())==0){
@@ -77,6 +78,12 @@ int main (int argc, char ** argv) {
 
         print_counters(papi_values);
         
+	/*Affichage des graphes*/
+	/*L1 Cache Miss*/
+	/*histogram[0]=values;
+	histogram[0]=;
+	histogram[0]=;*/
+
         if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
             exit(19);
