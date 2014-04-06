@@ -26,7 +26,8 @@ void print_help();
 void print_counters(long long *values);
 void set_option();
 void add_events();
-
+void write_miss_values(long long *values);
+ 
 void check_hypervisor_arguments(int argc, char **argv);
 void print_hypervisor_help();
 void init_papi_hypervisor();

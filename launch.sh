@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 make
 
@@ -26,11 +26,17 @@ sudo ./bin/papi_wrapper bin/rt_task 2 50000
 
 cat ./doc/mesures_execution.conf | gnuplot
 
-for ((i=1;i<=3;i++);
-do
-    echo "L"$i" Cache Miss"
-    cat ./doc/mesures_miss_histo.conf | gnuplot    
-    cat ./doc/mesures_miss_histo_som.conf | gnuplot
-done
+echo "L1 Cache Miss"
+cat ./doc/mesures_miss_L1.conf | gnuplot    
+cat ./doc/mesures_miss_L1_som.conf | gnuplot
+
+echo "L2 Cache Miss"
+cat ./doc/mesures_miss_L2.conf | gnuplot    
+cat ./doc/mesures_miss_L2_som.conf | gnuplot
+
+echo "L3 Cache Miss"
+cat ./doc/mesures_miss_L3.conf | gnuplot    
+cat ./doc/mesures_miss_L3_som.conf | gnuplot
+
 
 make clean

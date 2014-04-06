@@ -266,3 +266,59 @@ void print_counters_hypervisor(long long *values){
     printf("PAPI Hypervisor End \n");
     printf("============================================\n");
 }
+
+
+void write_miss_values(long long *values){
+
+  int fic_miss;
+ 
+  /*Ecriture des miss L1*/
+ if (( fic_miss = open("doc/mesures_miss_L1.data", O_RDWR | O_APPEND | O_CREAT))==-1){
+    fprintf(stderr, "Open error on fic_miss\n");
+    exit(17);	
+ }
+
+ if (write(fic_miss, &values[0], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(18);
+ }
+
+ if (write(fic_miss, &values[1], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(19);
+ }
+
+ /*Ecriture des miss L2*/
+ if (( fic_miss = open("doc/mesures_miss_L2.data", O_RDWR | O_APPEND | O_CREAT))==-1){
+   fprintf(stderr, "Open error on fic_miss\n");
+   exit(20);	
+ }
+
+ if (write(fic_miss, &values[2], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(21);
+ }
+
+ if (write(fic_miss, &values[3], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(22);
+ }
+
+ /*Ecriture des miss L3*/
+ if (( fic_miss = open("doc/mesures_miss_L3.data", O_RDWR | O_APPEND | O_CREAT))==-1){
+   fprintf(stderr, "Open error on fic_miss\n");
+   exit(23);	
+ }
+
+ if (write(fic_miss, &values[4], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(24);
+ }
+
+ if (write(fic_miss, &values[5], sizeof(long long))==-1){
+   fprintf(stderr, "Write error\n");
+   exit(25);
+ }
+
+ close(fic_miss);
+}
