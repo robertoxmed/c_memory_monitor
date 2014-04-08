@@ -21,22 +21,17 @@ elif [ $nb_attack -eq 1 ] || [ $nb_attack -eq 2 ]; then
 	done
 fi
 
-sleep 10
-sudo ./bin/papi_wrapper bin/rt_task 2 50000
-
-cat ./doc/mesures_execution.conf | gnuplot
+sudo ./bin/papi_wrapper bin/rt_task 50000
+cat plot/mesures_execution.conf | gnuplot
 
 echo "L1 Cache Miss"
-cat ./doc/mesures_miss_L1.conf | gnuplot    
-cat ./doc/mesures_miss_L1_som.conf | gnuplot
+cat plot/mesures_miss_L1.conf | gnuplot    
+cat plot/mesures_miss_L1_som.conf | gnuplot
 
 echo "L2 Cache Miss"
-cat ./doc/mesures_miss_L2.conf | gnuplot    
-cat ./doc/mesures_miss_L2_som.conf | gnuplot
+cat plot/mesures_miss_L2.conf | gnuplot    
+cat plot/mesures_miss_L2_som.conf | gnuplot
 
 echo "L3 Cache Miss"
-cat ./doc/mesures_miss_L3.conf | gnuplot    
-cat ./doc/mesures_miss_L3_som.conf | gnuplot
-
-
-make clean
+cat plot/mesures_miss_L3.conf | gnuplot    
+cat plot/mesures_miss_L3_som.conf | gnuplot

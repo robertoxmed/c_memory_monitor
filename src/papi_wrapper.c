@@ -72,29 +72,30 @@ int main (int argc, char ** argv) {
     wait(NULL);
     gettimeofday(&tv2, NULL);
     
-    double* buf[1];
+    double buf[1];
 
-    *buf[0]=(double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
-    printf ("\nTotal time = %f seconds\n",*buf[0]);
+    buf[0]=(double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
+    printf ("\nTotal time = %f seconds\n", buf[0]);
 
     print_counters(papi_values);
         
     int fic_time;
 
-    if ((fic_time = open("doc/mesures_execution.data", O_RDWR | O_APPEND | O_CREAT))==-1){
-      fprintf(stderr, "Open error on fic_time\n");
+    if ((fic_time = open("./plot/mesures_execution.data", O_RDWR | O_APPEND))==-1){
+      perror("Open error on fic_time\n");
       exit(19);	
     }
     
-
-    if (write(fic_time,buf, sizeof(float))==-1){
+    if (write(fic_time, &buf[0], sizeof(float))==0){
       fprintf(stderr, "Write exec_time error\n");
       exit(20);
     }
 
     close(fic_time);
 
-    write_miss_values(papi_values); 
+    write_miss_values(papi_values);
+
+    fprintf(stderr, "Écriture des valeurs pour GNUplot\n");
 
     if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
       fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));

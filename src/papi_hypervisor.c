@@ -5,13 +5,13 @@
 #define NB_RT_ITERATION "20000000"
 
 pid_t pid_attacker[2] = {-1, -1};
-int nb_attackers = 0;
+int nb_attackers = 0, send = 0;
 
 long long rt_quota_l3 = CACHE_QUOTA; //The quota for the cache 
 int new_window = 5; // <= How many times the handler will decrement before the new window
 
 void timer_handler(int signo, siginfo_t *info, void *context){
-	int i, ret, send = 0;
+	int i, ret;
 	//Read the values with PAPI
 	if(signo == SIGRTMIN){
         hypervisor_value = 0;
@@ -123,7 +123,7 @@ int main (int argc, char ** argv) {
 /**********************************************************************************************/
 
 /**********************************************************************************************/
-    //Child executes the RT task in one core		
+    //Child executes the RT task in one core	
 	if((rt_child = fork())==0){
         int stdin_fd = -1;
 
