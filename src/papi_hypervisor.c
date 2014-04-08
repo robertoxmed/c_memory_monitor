@@ -1,6 +1,6 @@
 #include "../include/papi_util.h"
 
-#define CACHE_QUOTA 1800000
+#define CACHE_QUOTA 1500000
 #define ITERATION_MODE "1"
 #define NB_RT_ITERATION "20000000"
 
@@ -8,7 +8,7 @@ pid_t pid_attacker[2] = {-1, -1};
 int nb_attackers = 0, send = 0;
 
 long long rt_quota_l3 = CACHE_QUOTA; //The quota for the cache 
-int new_window = 5; // <= How many times the handler will decrement before the new window
+int new_window = 10; // <= How many times the handler will decrement before the new window
 
 void timer_handler(int signo, siginfo_t *info, void *context){
 	int i, ret;
@@ -38,7 +38,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
             fprintf(stderr, "New window\n");
             for(i=0; i<nb_attackers; i++)
         	   kill(pid_attacker[i], SIGCONT);
-            new_window = 5;
+            new_window = 10;
             rt_quota_l3 = CACHE_QUOTA;
             send = 0;
         }
@@ -82,10 +82,10 @@ int main (int argc, char ** argv) {
     sigev.sigev_signo = SIGRTMIN;
     sigev.sigev_value.sival_ptr = &tid;
     if(timer_create(CLOCK_REALTIME, &sigev, &tid) != -1){
-        new_tmr.it_value.tv_sec = 1;
-        new_tmr.it_value.tv_nsec = 0;
-        new_tmr.it_interval.tv_sec = 1;
-        new_tmr.it_interval.tv_nsec = 0;
+        new_tmr.it_value.tv_sec = 0;
+        new_tmr.it_value.tv_nsec = 500000000;
+        new_tmr.it_interval.tv_sec = 0;
+        new_tmr.it_interval.tv_nsec = 500000000;
     }
 
 
