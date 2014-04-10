@@ -80,15 +80,11 @@ Description du sujet
 \end_layout
 
 \begin_layout Itemize
-Problématique: géstion de l'accès concurrent aux caches et à la mémoire
- entre une tâche temps-réel et des tâches attaquantes en sachant qu'on ne
- peut faire que des mesures globales dans la mémoire et pas pour chaque
- coeur
+Problématique
 \end_layout
 
 \begin_layout Itemize
-Objectif: proposer une solution en mode user en utilisant une librairie
- particulière (PAPI) pour les mesures
+Objectif
 \end_layout
 
 \begin_layout Itemize
@@ -102,21 +98,9 @@ Les différentes tâches (attaquantes, temps réel)
 \end_layout
 
 \begin_layout Itemize
-Description des 2 types de tâches et leur impact sur la mémoire:
+Description des 2 types de tâches et leur impact sur la mémoire 
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-on a une tâche temps-réelle non périodique et sans contrainte temporelle,
- on doit uniquement être sûre qu'elle se termine en un temps fini
-\end_layout
-
-\begin_layout Itemize
-les tâches attaquantes doivent effectuer un maximum d'accès mémorie afin
- de saturer le bus mémoire et les caches partagés entre les différents coeurs
-\end_layout
-
-\end_deeper
 \begin_layout Itemize
 Evolution des choix face au prefetching, régime transitoire et permanent,
  les printf
@@ -127,13 +111,11 @@ Comment mesurer?
 \end_layout
 
 \begin_layout Itemize
-Utilisation de PAPI (fonction pour les mesures, évèments initialisés et
- utilisés)
+Utilisation de PAPI
 \end_layout
 
 \begin_layout Itemize
-Mesures du nombre de MISS sur le cache partagé L3 pour approximer le nombre
- d'accès mémoire puisqu'on ne peut mesurer les accès mémoire sur notre machine
+Evènements mesurés
 \end_layout
 
 \begin_layout Itemize
@@ -187,15 +169,11 @@ Explication du problème de sous-réservation de BP mémoire
 \end_layout
 
 \begin_layout Itemize
-Les problèmes que cette solution peut générer: comment gérer les accès mémoire
- tout en gardant une certaine concurrence
+Les problèmes que cette solution peut générer
 \end_layout
 
 \begin_layout Itemize
-Une solution proposée: Création d'un hyperviseur envoyant des signaux aux
- différentes tâches lorqu'elles ont consommées toute la BP accordé et que
- la tâche temps-réel n'a pas encore utilisé sa BP et remise à zéros des
- différents compteurs de BP dans ce cas
+Une solution proposée: Hyperviseur + signaux
 \end_layout
 
 \begin_layout Subsection
@@ -208,13 +186,12 @@ Evolution du fonctionnement de la tâche temps-réel et des tâches attaquantes
 \end_layout
 
 \begin_layout Itemize
-Description du fonctionnement de l'hyperviseur (mesure de la consommation
- de BP, gestion des compteurs mesurant cette consommation et envoie de signaux
- aux différentes tâches), problèmes rencontrés ou pas
+Description du fonctionnement de l'hyperviseur et problèmes rencontrés ou
+ pas
 \end_layout
 
 \begin_layout Itemize
-Comment utiliser PAPI dans cette situation (fonctionnalitées rajoutées)
+Comment utiliser PAPI dans cette situation
 \end_layout
 
 \begin_layout Subsection
@@ -234,7 +211,7 @@ Conclusion
 \end_layout
 
 \begin_layout Itemize
-La solution résout-elle le problème de contention mémoire, si oui pourquoi?
+La solution est-elle adéquate, si oui pourquoi?
 \end_layout
 
 \begin_layout Section
@@ -247,7 +224,7 @@ Avantages et inconvénients de l'utilisation d'un hyperviseur et comparaison
 \end_layout
 
 \begin_layout Itemize
-Ouverture: Existe-t-il une solution plus optimale?
+Ouverture
 \end_layout
 
 \end_body
