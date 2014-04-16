@@ -20,6 +20,14 @@ extern long long hypervisor_value; //The number of memory accesses
 extern long long papi_values[7];
 extern int PAPI_EventSet;
 
+extern int notifier_eventset_rt;
+extern int notifier_eventset_a0;
+extern int notifier_eventset_a1;
+extern long long notifier_value_rt;
+extern long long notifier_value_a0;
+extern long long notifier_value_a1;
+
+// Used by PAPI Wrapper
 void check_papi();
 void check_arguments(int argc, char **argv);
 void print_help();
@@ -28,12 +36,19 @@ void set_option();
 void add_events();
 void write_miss_values(long long *values);
  
+// Used by PAPI Hypervisor
 void check_hypervisor_arguments(int argc, char **argv);
 void print_hypervisor_help();
 void init_papi_hypervisor();
 void set_option_hypervisor();
 void add_event_hypervisor();
-void print_counters_hypervisor(long long *values);
 
+// Used by PAPI Notifier
+void check_notifier_arguments(int argc, char **argv);
+void print_notifier_help();
+void init_papi_notifier();
+void set_option_notifier();
+void add_event_notifier();
+void print_counters_notifier(long long *values);
 
 #endif
