@@ -1,16 +1,19 @@
 #include "../include/papi_util.h"
 
-#define MEMORY_QUOTA 900
+#define MEMORY_QUOTA 60000
+#define THRESHOLD 500
 #define ITERATION_MODE "1"
 #define NB_RT_ITERATION "20000000"
 
 pid_t pid_attacker[2] = {-1, -1};
-int nb_attackers = 2, send = 0;
+int threshold = 0;
+int nb_attackers = 2;
 
-long long rt_quota_l3 = MEMORY_QUOTA / 3; //The quota for the cache 
-long long a0_quota_l3 = MEMORY_QUOTA / 3;
-long long a1_quota_l3 = MEMORY_QUOTA / 3;
-int new_window = 20; // <= How many times the handler will decrement before the new window
+long long rt_quota_l1 = 0; //The quota for every task
+long long a0_quota_l1 = 0;
+long long a1_quota_l1 = 0;
+long long current_quota;
+long long total_avail_quota = MEMORY_QUOTA;
 
 void timer_handler(int signo, siginfo_t *info, void *context){
 	int i, ret;
@@ -19,44 +22,55 @@ void timer_handler(int signo, siginfo_t *info, void *context){
         notifier_value_rt = 0;
         notifier_value_a0 = 0;
         notifier_value_a1 = 0;
+        fprintf(stderr, "Cuurent quota = %lld\n", current_quota);
 
-        if((ret = PAPI_accum(notifier_eventset_rt, &notifier_value_rt)) != PAPI_OK){
+        if((ret = PAPI_accum(notifier_eventset_rt, &notifier_value_rt)) != PAPI_OK)
     		fprintf(stderr, "PAPI error: Couldn't read the RT values %s\n", PAPI_strerror(ret));
-    		exit(20);
-    	}
-        if((ret = PAPI_accum(notifier_eventset_a0, &notifier_value_a0)) != PAPI_OK){
+    	
+        if((ret = PAPI_accum(notifier_eventset_a0, &notifier_value_a0)) != PAPI_OK)
             fprintf(stderr, "PAPI error: Couldn't read the A0 values %s\n", PAPI_strerror(ret));
-            exit(20);
-        }
-        if((ret = PAPI_accum(notifier_eventset_a1, &notifier_value_a1)) != PAPI_OK){
+            
+        if((ret = PAPI_accum(notifier_eventset_a1, &notifier_value_a1)) != PAPI_OK)
             fprintf(stderr, "PAPI error: Couldn't read the A1 values %s\n", PAPI_strerror(ret));
-            exit(20);
-        }
-    	//Test the quota and send the sigstop
-        fprintf(stderr, "RT = %lld\n", notifier_value_rt);
-        fprintf(stderr, "A0 = %lld\n", notifier_value_a0);
-        fprintf(stderr, "A1 = %lld\n", notifier_value_a1);
-    	rt_quota_l3 -= notifier_value_rt;
-        a0_quota_l3 -= notifier_value_a0;
-        a1_quota_l3 -= notifier_value_a1;
+        
+    	rt_quota_l1 += notifier_value_rt;
+        a0_quota_l1 += notifier_value_a0;
+        a1_quota_l1 += notifier_value_a1;
 
-    	if((rt_quota_l3 <= 0) && (send == 0)){
-            fprintf(stderr, "Quota exceeded will stop attackers\n");
-    		for(i=0; i<nb_attackers; i++)
-    			kill(pid_attacker[i],SIGSTOP);
-            send = 1;
-    	}
+        total_avail_quota -= rt_quota_l1;
+        total_avail_quota -= a0_quota_l1;
+        total_avail_quota -= a1_quota_l1;
 
-    	new_window --;
-
-    	//If new window send SIGCONT to attackers
-        if(!new_window){
-            fprintf(stderr, "New window\n");
-            for(i=0; i<nb_attackers; i++)
-        	   kill(pid_attacker[i], SIGCONT);
-            new_window = 20;
-            rt_quota_l3 = MEMORY_QUOTA;
-            send = 0;
+        if(threshold == 0){
+            // Test if a task has consumed its quota every 0.01 seconds
+            if((a0_quota_l1 >= current_quota) || (a1_quota_l1 >= current_quota) || (rt_quota_l1 >= current_quota)){
+                current_quota = current_quota / 3;
+                fprintf(stderr, "Quota of one of the tasks exceeded. New quota = %lld\n", current_quota);
+                rt_quota_l1 = 0;
+                a1_quota_l1 = 0;
+                a0_quota_l1 = 0;
+                //If new window send SIGCONT to attackers
+                if(total_avail_quota <= THRESHOLD){
+                    fprintf(stderr, "There is only the THRESHOLD left. Attackers will be stopped.\n");
+                    for(i=0; i<nb_attackers; i++)
+                       kill(pid_attacker[i], SIGSTOP);
+                    threshold ++;
+                }
+            }
+        	
+        }else if(threshold == 1){
+            // In the threshold
+            if(total_avail_quota <= 0){
+                fprintf(stderr, "New window, the threshold was consumed.\n");
+                for(i=0; i < nb_attackers; i++)
+                    kill(pid_attacker[i], SIGCONT);
+                threshold = 0;
+                rt_quota_l1 = 0;
+                a0_quota_l1 = 0;
+                a1_quota_l1 = 0;
+                current_quota = MEMORY_QUOTA / (nb_attackers + 1);
+                total_avail_quota = MEMORY_QUOTA;
+            }
         }
     }
 }
@@ -71,15 +85,16 @@ int main (int argc, char ** argv) {
     struct sched_param s_param;
     cpu_set_t mask;
 
-    check_hypervisor_arguments(argc, argv);
+    check_notifier_arguments(argc, argv);
     
     //--------------------------------PAPI initilization------------------------------//
     check_papi();
-    init_papi_hypervisor();
+    init_papi_notifier();
     set_option();
-    set_option_hypervisor();
+    set_option_notifier();
     add_events();
-    add_event_hypervisor();
+    add_event_notifier();
+    current_quota = MEMORY_QUOTA / (nb_attackers + 1);
 
     //---------------------------Timer initialization and sigaction----------------------//
     sa.sa_flags = SA_SIGINFO;
@@ -99,17 +114,18 @@ int main (int argc, char ** argv) {
     sigev.sigev_value.sival_ptr = &tid;
     if(timer_create(CLOCK_REALTIME, &sigev, &tid) != -1){
         new_tmr.it_value.tv_sec = 0;
-        new_tmr.it_value.tv_nsec = 250000000;
+        new_tmr.it_value.tv_nsec = 10000000;
         new_tmr.it_interval.tv_sec = 0;
-        new_tmr.it_interval.tv_nsec = 250000000;
+        new_tmr.it_interval.tv_nsec = 10000000;
     }
 
 
 /**********************************************************************************************/
     //Launch the attackers
-    printf("Launching %d attackers\n", atoi(argv[2]));
-    for(i=0; i < atoi(argv[2]); i++){
-        if((pid_attacker[nb_attackers++] = fork()) == 0){
+
+    printf("Launching %d attackers\n", nb_attackers);
+    for(i=0; i < nb_attackers; i++){
+        if((pid_attacker[i] = fork()) == 0){
             int stdin_fd = -1;
 
             CPU_ZERO(&mask);
@@ -122,7 +138,7 @@ int main (int argc, char ** argv) {
             close(stdin_fd);
 
             if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
-                fprintf(stderr, "Sched error: set affinity\n");
+                perror("Sched error: set affinity\n");
                 exit(16);
             }
             if(execl("bin/attack_task2", "Attack task", ITERATION_MODE, NULL) == -1){
@@ -171,7 +187,7 @@ int main (int argc, char ** argv) {
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(16);
 /**********************************************************************************************/
-    //The wrapper        
+    //The Notifier        
 	}else{
         sleep(1); //<= Waiting for stationnary period
         if(timer_settime(tid, 0, &new_tmr, NULL) == -1){
@@ -184,8 +200,16 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(16);
         }
-        if((ret = PAPI_start(hypervisor_eventset)) != PAPI_OK){
-            fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
+        if((ret = PAPI_start(notifier_eventset_rt)) != PAPI_OK){
+            fprintf(stderr, "PAPI error: failed to start counters RT: %s\n", PAPI_strerror(ret));
+            exit(16);
+        }
+        if((ret = PAPI_start(notifier_eventset_a0)) != PAPI_OK){
+            fprintf(stderr, "PAPI error: failed to start counters A0: %s\n", PAPI_strerror(ret));
+            exit(16);
+        }
+        if((ret = PAPI_start(notifier_eventset_a1)) != PAPI_OK){
+            fprintf(stderr, "PAPI error: failed to start counters A1: %s\n", PAPI_strerror(ret));
             exit(16);
         }
 
@@ -211,7 +235,15 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
             exit(17);
         }
-        if((ret = PAPI_stop(hypervisor_eventset, &hypervisor_value))!= PAPI_OK){
+        if((ret = PAPI_stop(notifier_eventset_rt, &notifier_value_rt))!= PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
+            exit(17);
+        }
+        if((ret = PAPI_stop(notifier_eventset_a0, &notifier_value_a0))!= PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
+            exit(17);
+        }
+        if((ret = PAPI_stop(notifier_eventset_a1, &notifier_value_a1))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
             exit(17);
         }
@@ -221,7 +253,7 @@ int main (int argc, char ** argv) {
             exit(18);
         }
 
-        print_counters_hypervisor(papi_values);
+        print_counters(papi_values);
         
         if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
@@ -232,12 +264,27 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
             exit(20);
         }
-        if((ret=PAPI_cleanup_eventset(hypervisor_eventset))!=PAPI_OK){
+        if((ret=PAPI_cleanup_eventset(notifier_eventset_rt))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
             exit(19);
         }
-
-        if((ret=PAPI_destroy_eventset(&hypervisor_eventset))!=PAPI_OK){
+        if((ret=PAPI_destroy_eventset(&notifier_eventset_rt))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
+            exit(20);
+        }
+        if((ret=PAPI_cleanup_eventset(notifier_eventset_a0))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
+            exit(19);
+        }
+        if((ret=PAPI_destroy_eventset(&notifier_eventset_a0))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
+            exit(20);
+        }
+        if((ret=PAPI_cleanup_eventset(notifier_eventset_a1))!=PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
+            exit(19);
+        }
+        if((ret=PAPI_destroy_eventset(&notifier_eventset_a1))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
             exit(20);
         }

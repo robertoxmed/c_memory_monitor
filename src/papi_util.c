@@ -156,30 +156,38 @@ void init_papi_notifier(){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
-
     if((retval = PAPI_create_eventset(&notifier_eventset_a0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
-
     if((retval = PAPI_create_eventset(&notifier_eventset_a1)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
-
     if((retval = PAPI_assign_eventset_component(notifier_eventset_rt, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component rt: %s\n", PAPI_strerror(retval));
         exit(5);
     }
-
     if((retval = PAPI_assign_eventset_component(notifier_eventset_a0, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component a0: %s\n", PAPI_strerror(retval));
         exit(5);
     }
-
     if((retval = PAPI_assign_eventset_component(notifier_eventset_a1, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component a1: %s\n", PAPI_strerror(retval));
         exit(5);
+    }
+
+    if((retval=PAPI_set_multiplex(notifier_eventset_rt)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        exit(6);
+    }
+    if((retval=PAPI_set_multiplex(notifier_eventset_a0)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        exit(6);
+    }
+    if((retval=PAPI_set_multiplex(notifier_eventset_a1)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        exit(6);
     }
 }
 
@@ -316,23 +324,20 @@ void set_option_notifier(){
     PAPI_cpu_option_t cpu_opt;
     cpu_opt.eventset = notifier_eventset_rt;
     cpu_opt.cpu_num = 1;
+    if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
+        fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
+        exit(9);
+    }
 
+    cpu_opt.eventset = notifier_eventset_a0;
+    cpu_opt.cpu_num = 2;
     if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
         exit(9);
     }
 
     cpu_opt.eventset = notifier_eventset_a1;
-    cpu_opt.cpu_num = 1;
-
-    if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
-        exit(9);
-    }
-
-    cpu_opt.eventset = notifier_eventset_a1;
-    cpu_opt.cpu_num = 1;
-
+    cpu_opt.cpu_num = 3;
     if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't set the granularity of the events retval : %s\n", PAPI_strerror(retval));
         fprintf(stderr, "Make sure you run this program as root!\n");
@@ -386,17 +391,17 @@ void add_event_notifier(){
     int retval;
 
     if((retval = PAPI_add_event(notifier_eventset_rt, PAPI_L1_TCM)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't add L3 TCM to event set %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't add L1 TCM to event set RT : %s\n", PAPI_strerror(retval));
         fprintf(stderr, "Can't continue: Notifier needs memory misses.\n");
         exit(15);
     }
     if((retval = PAPI_add_event(notifier_eventset_a0, PAPI_L1_TCM)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't add L3 TCM to event set %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't add L1 TCM to event set A0:  %s\n", PAPI_strerror(retval));
         fprintf(stderr, "Can't continue: Notifier needs memory access.\n");
         exit(15);
     }
     if((retval = PAPI_add_event(notifier_eventset_a1, PAPI_L1_TCM)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't add L3 TCM to event set %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't add L1 TCM to event set A1: %s\n", PAPI_strerror(retval));
         fprintf(stderr, "Can't continue: Notifier needs memory access.\n");
         exit(15);
     }

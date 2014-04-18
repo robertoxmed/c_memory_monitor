@@ -155,7 +155,7 @@ int main (int argc, char ** argv) {
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(16);
 /**********************************************************************************************/
-    //The wrapper        
+    //The Hypervisor        
 	}else{
         sleep(1); //<= Waiting for stationnary period
         if(timer_settime(tid, 0, &new_tmr, NULL) == -1){

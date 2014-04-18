@@ -49,6 +49,5 @@ void print_notifier_help();
 void init_papi_notifier();
 void set_option_notifier();
 void add_event_notifier();
-void print_counters_notifier(long long *values);
 
 #endif
