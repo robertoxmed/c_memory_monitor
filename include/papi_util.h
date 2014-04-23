@@ -27,8 +27,9 @@ extern long long notifier_value_rt;
 extern long long notifier_value_a0;
 extern long long notifier_value_a1;
 
+void init_papi();
+
 // Used by PAPI Wrapper
-void check_papi();
 void check_arguments(int argc, char **argv);
 void print_help();
 void print_counters(long long *values);
@@ -37,17 +38,17 @@ void add_events();
 void write_miss_values(long long *values);
  
 // Used by PAPI Hypervisor
-void check_hypervisor_arguments(int argc, char **argv);
-void print_hypervisor_help();
-void init_papi_hypervisor();
-void set_option_hypervisor();
-void add_event_hypervisor();
+void hypervisor_check_arguments(int argc, char **argv);
+void hypervisor_print_help();
+void hypervisor_init_papi();
+void hypervisor_set_option();
+void hypervisor_add_event();
 
 // Used by PAPI Notifier
-void check_notifier_arguments(int argc, char **argv);
-void print_notifier_help();
-void init_papi_notifier();
-void set_option_notifier();
-void add_event_notifier();
+void notifier_check_arguments(int argc, char **argv);
+void notifier_print_help();
+void notifier_init_papi();
+void notifier_set_option();
+void notifier_add_event();
 
 #endif

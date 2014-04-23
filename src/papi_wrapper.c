@@ -7,7 +7,7 @@ int main (int argc, char ** argv) {
 
   check_arguments(argc, argv);
   //PAPI initilization
-  check_papi();
+  init_papi();
   set_option();
   add_events();
   /**********************************************************************************************/

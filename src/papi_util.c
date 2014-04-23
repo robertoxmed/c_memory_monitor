@@ -27,7 +27,7 @@ void print_help(){
     printf("===========================================\n");
 }
 
-void print_hypervisor_help(){
+void hypervisor_print_help(){
     printf("===========================================\n");
     printf("PAPI Hypervisor Help:\n");
     printf("===========================================\n");    
@@ -39,7 +39,7 @@ void print_hypervisor_help(){
     printf("===========================================\n");
 }
 
-void print_notifier_help(){
+void notifier_print_help(){
     printf("===========================================\n");
     printf("PAPI Notificator Help:\n");
     printf("===========================================\n");    
@@ -67,9 +67,9 @@ void check_arguments (int argc, char ** argv){
     }
 }
 
-void check_hypervisor_arguments(int argc, char **argv){
+void hypervisor_check_arguments(int argc, char **argv){
     if(argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help")) == 0){
-        print_hypervisor_help();
+        hypervisor_print_help();
         exit(0);
     }else if(argc == 3){
         printf("============================================\n");
@@ -82,9 +82,9 @@ void check_hypervisor_arguments(int argc, char **argv){
     }
 }
 
-void check_notifier_arguments(int argc, char **argv){
+void notifier_check_arguments(int argc, char **argv){
     if(argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help")) == 0){
-        print_notifier_help();
+        notifier_print_help();
         exit(0);
     }else if(argc == 2){
         printf("============================================\n");
@@ -97,9 +97,10 @@ void check_notifier_arguments(int argc, char **argv){
     }
 }
 
+//------------------ Initialization of the library & creation of event sets---------------------
 
-//Checks the available events in the host's processor
-void check_papi(){
+//Initializes the library for PAPI. Should always be called when using PAPI.
+void init_papi(){
     int retval;
 
     //Initialize the library
@@ -114,7 +115,7 @@ void check_papi(){
         exit(2);
     }
     
-    //Create the EventSet with existing events
+    //Create the EventSet
     if((retval=PAPI_create_eventset (&PAPI_EventSet)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
         exit(4);
@@ -131,9 +132,9 @@ void check_papi(){
     }
 }
 
-void init_papi_hypervisor(){
+// The hypervisor has one event set to count memory accesses
+void hypervisor_init_papi(){
     int retval;
-    //Create the EventSet with existing events
     if((retval=PAPI_create_eventset (&hypervisor_eventset)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
         exit(4);
@@ -149,19 +150,20 @@ void init_papi_hypervisor(){
     }
 }
 
-void init_papi_notifier(){
+// The notifier has three event sets. One for each core/task.
+void notifier_init_papi(){
     int retval;
 
     if((retval = PAPI_create_eventset(&notifier_eventset_rt)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't create the Event Set RT: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
     if((retval = PAPI_create_eventset(&notifier_eventset_a0)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't create the Event Set A0: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
     if((retval = PAPI_create_eventset(&notifier_eventset_a1)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: can't create the Event Set: %s\nWill now exit.", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: can't create the Event Set A1: %s\nWill now exit.", PAPI_strerror(retval));
         exit(4);
     }
     if((retval = PAPI_assign_eventset_component(notifier_eventset_rt, 0)) != PAPI_OK){
@@ -176,26 +178,25 @@ void init_papi_notifier(){
         fprintf(stderr, "PAPI error: component a1: %s\n", PAPI_strerror(retval));
         exit(5);
     }
-
     if((retval=PAPI_set_multiplex(notifier_eventset_rt)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: couldn't set multiplexing RT: %s\n", PAPI_strerror(retval));
         exit(6);
     }
     if((retval=PAPI_set_multiplex(notifier_eventset_a0)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: couldn't set multiplexing A0: %s\n", PAPI_strerror(retval));
         exit(6);
     }
     if((retval=PAPI_set_multiplex(notifier_eventset_a1)) != PAPI_OK){
-        fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
+        fprintf(stderr, "PAPI error: couldn't set multiplexing A1: %s\n", PAPI_strerror(retval));
         exit(6);
     }
 }
 
 //--------------------------- Setting the granularity of the PAPI event set. -------------------------
+
 //The set will be attached to the RT child. Couldn't attach to the core itself.
 void set_option(){
 	int retval;
-
     //Setting the granularity for the events only the RT core is interesting
     PAPI_domain_option_t domain_opt;
     domain_opt.def_cidx = 0;
@@ -228,7 +229,7 @@ void set_option(){
 	}
 }
 
-void set_option_hypervisor(){
+void hypervisor_set_option(){
     int retval;
 
     //Setting the granularity for the events only the RT core is interesting
@@ -263,7 +264,7 @@ void set_option_hypervisor(){
     }
 }
 
-void set_option_notifier(){
+void notifier_set_option(){
     int retval;
 
     //Setting the granularity for the events only the RT core is interesting
@@ -377,7 +378,7 @@ void add_events(){
 }
 
 
-void add_event_hypervisor(){
+void hypervisor_add_event(){
     int retval;
 
     if((retval = PAPI_add_event(hypervisor_eventset, PAPI_L3_TCM)) != PAPI_OK){
@@ -387,7 +388,7 @@ void add_event_hypervisor(){
     }
 }
 
-void add_event_notifier(){
+void notifier_add_event(){
     int retval;
 
     if((retval = PAPI_add_event(notifier_eventset_rt, PAPI_L1_TCM)) != PAPI_OK){

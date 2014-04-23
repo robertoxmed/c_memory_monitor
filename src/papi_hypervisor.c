@@ -55,15 +55,15 @@ int main (int argc, char ** argv) {
     struct sched_param s_param;
     cpu_set_t mask;
 
-    check_hypervisor_arguments(argc, argv);
+    hypervisor_check_arguments(argc, argv);
     
     //--------------------------------PAPI initilization------------------------------//
-    check_papi();
-    init_papi_hypervisor();
+    init_papi();
+    hypervisor_init_papi();
     set_option();
-    set_option_hypervisor();
+    hypervisor_set_option();
     add_events();
-    add_event_hypervisor();
+    hypervisor_add_event();
 
     //---------------------------Timer initialization and sigaction----------------------//
     sa.sa_flags = SA_SIGINFO;

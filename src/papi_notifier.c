@@ -85,15 +85,15 @@ int main (int argc, char ** argv) {
     struct sched_param s_param;
     cpu_set_t mask;
 
-    check_notifier_arguments(argc, argv);
+    notifier_check_arguments(argc, argv);
     
     //--------------------------------PAPI initilization------------------------------//
-    check_papi();
-    init_papi_notifier();
+    init_papi();
+    notifier_init_papi();
     set_option();
-    set_option_notifier();
+    notifier_set_option();
     add_events();
-    add_event_notifier();
+    notifier_add_event();
     current_quota = MEMORY_QUOTA / (nb_attackers + 1);
 
     //---------------------------Timer initialization and sigaction----------------------//
