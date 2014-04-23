@@ -45,4 +45,5 @@ Pour avoir de l'aide sur le wrapper:
 
 <code>./bin/papi_hypervisor -h </code>
 
+![Exemple d'éxécution](/doc/sar.png?raw=true "Exemple d'éxécution de l'hyperviseur")
 
