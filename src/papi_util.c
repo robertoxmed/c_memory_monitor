@@ -432,53 +432,46 @@ void print_counters(long long *values){
 void write_miss_values(long long *values){
 
     int fic_miss;
+    char values_to_char[3][40];
+
+    sprintf(values_to_char[0],"%lld\n", values[0] + values[1]);
+    sprintf(values_to_char[1],"%lld\n", values[2] + values[3]);
+    sprintf(values_to_char[2],"%lld\n", values[4]);
 
     /*Ecriture des miss L1*/
     if (( fic_miss = open("./plot/mesures_miss_L1.data", O_RDWR | O_APPEND))==-1){
-        fprintf(stderr, "Open error on fic_miss\n");
+        fprintf(stderr, "Open error on fic_miss L1 data\n");
         exit(17);	
     }
-
-    if (write(fic_miss, &values[0], sizeof(long long))==-1){
+    if (write(fic_miss, values_to_char[0], strlen(values_to_char[0]))==-1){
         fprintf(stderr, "Write error\n");
         exit(18);
     }
 
-    if (write(fic_miss, &values[1], sizeof(long long))==-1){
-        fprintf(stderr, "Write error\n");
-        exit(19);
-    }
     close(fic_miss);
+
     /*Ecriture des miss L2*/
     if (( fic_miss = open("./plot/mesures_miss_L2.data", O_RDWR | O_APPEND))==-1){
-        fprintf(stderr, "Open error on fic_miss\n");
+        fprintf(stderr, "Open error on fic_miss L2 data\n");
         exit(20);	
     }
 
-    if (write(fic_miss, &values[2], sizeof(long long))==-1){
+    if (write(fic_miss, values_to_char[1], strlen(values_to_char[1]))==-1){
         fprintf(stderr, "Write error\n");
         exit(21);
     }
 
-    if (write(fic_miss, &values[3], sizeof(long long))==-1){
-        fprintf(stderr, "Write error\n");
-        exit(22);
-    }
     close(fic_miss);
+
     /*Ecriture des miss L3*/
     if (( fic_miss = open("./plot/mesures_miss_L3.data", O_RDWR | O_APPEND))==-1){
-        fprintf(stderr, "Open error on fic_miss\n");
+        fprintf(stderr, "Open error on fic_miss L3 data\n");
         exit(23);	
     }
 
-    if (write(fic_miss, &values[4], sizeof(long long))==-1){
+    if (write(fic_miss, values_to_char[2], strlen(values_to_char[2]))==-1){
         fprintf(stderr, "Write error\n");
         exit(24);
-    }
-
-    if (write(fic_miss, &values[5], sizeof(long long))==-1){
-        fprintf(stderr, "Write error\n");
-        exit(25);
     }
 
     close(fic_miss);

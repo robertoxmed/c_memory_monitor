@@ -25,7 +25,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
     	rt_quota_l3 -= scheduler_value;
 
     	if((rt_quota_l3 <= 0) && (send == 0)){
-            fprintf(stderr, "Quota exceeded will stop attackers\n");
+            fprintf(stderr, "Scheduler (%d) > Quota exceeded will stop attackers\n", getpid());
     		for(i=0; i<nb_attackers; i++)
     			kill(pid_attacker[i],SIGSTOP);
             send = 1;
@@ -35,7 +35,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
 
     	//If new window send SIGCONT to attackers
         if(!new_window){
-            fprintf(stderr, "New window\n");
+            fprintf(stderr, "Scheduler (%d) > New window\n", getpid());
             for(i=0; i<nb_attackers; i++)
         	   kill(pid_attacker[i], SIGCONT);
             new_window = 20;
