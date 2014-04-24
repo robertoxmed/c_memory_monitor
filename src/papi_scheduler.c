@@ -226,7 +226,24 @@ int main (int argc, char ** argv) {
 
         // Writting the time for Gnuplot
         int fic_time;
-        if ((fic_time = open("./plot/mesures_execution.data", O_RDWR | O_APPEND))==-1){
+        char fic_name[50];
+
+        switch(atoi(argv[2])){
+            case 0:
+                strcpy(fic_name, "./plot/mesures_execution_0_scheduler.data");
+                break;
+            case 1:
+                strcpy(fic_name, "./plot/mesures_execution_1_scheduler.data");
+                break;
+            case 2:
+                strcpy(fic_name, "./plot/mesures_execution_2_scheduler.data");
+                break;
+            default:
+                strcpy(fic_name, "./plot/mesures_execution.data");
+                break;
+        }
+
+        if ((fic_time = open(fic_name, O_RDWR | O_APPEND))==-1){
             perror("Open error on fic_time\n");
             exit(19); 
         }

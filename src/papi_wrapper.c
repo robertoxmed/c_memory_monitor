@@ -1,5 +1,7 @@
 #include "../include/papi_util.h"
 
+#define NB_RT_ITERATION "20000000"
+
 int main (int argc, char ** argv) {
   int ret;
   pid_t rt_child;
@@ -39,7 +41,7 @@ int main (int argc, char ** argv) {
       exit(17);
     }
 
-    execl(argv[1], "RT task", argv[2], NULL);
+    execl(argv[1], "RT task", NB_RT_ITERATION, NULL);
         
   }else if(rt_child == -1){
     fprintf(stderr, "Fork: couldn't create the RT child.\n");
@@ -83,7 +85,23 @@ int main (int argc, char ** argv) {
     print_counters(papi_values);
         
     int fic_time;
-    if ((fic_time = open("./plot/mesures_execution.data", O_RDWR | O_APPEND))==-1){
+    char fic_name[50];
+
+    switch(atoi(argv[2])){
+      case 0:
+        strcpy(fic_name, "./plot/mesures_execution_0_wrapper.data");
+        break;
+      case 1:
+        strcpy(fic_name, "./plot/mesures_execution_1_wrapper.data");
+        break;
+      case 2:
+        strcpy(fic_name, "./plot/mesures_execution_2_wrapper.data");
+        break;
+      default:
+        strcpy(fic_name, "./plot/mesures_execution.data");
+        break;
+    }
+    if ((fic_time = open(fic_name, O_RDWR | O_APPEND))==-1){
       perror("Open error on fic_time\n");
       exit(19);	
     }
