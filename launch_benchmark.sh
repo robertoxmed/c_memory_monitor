@@ -28,7 +28,7 @@ echo "**************************************"
 echo "       Wrapper with 1 attacker        "
 echo "**************************************"
 
-./bin/attack_task 1 & >/dev/null 2>&1
+./bin/attack_task 1 2 & >/dev/null 2>&1
 
 for ((i=0; i < 50; i++));
 do
@@ -39,7 +39,7 @@ echo "**************************************"
 echo "       Wrapper with 2 attackers       "
 echo "**************************************"
 
-./bin/attack_task 1 & >/dev/null 2>&1
+./bin/attack_task 1 3 & >/dev/null 2>&1
 
 for ((i=0; i < 50; i++));
 do

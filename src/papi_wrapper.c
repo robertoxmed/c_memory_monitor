@@ -115,8 +115,6 @@ int main (int argc, char ** argv) {
 
     write_miss_values(papi_values);
 
-    fprintf(stderr, "Écriture des valeurs pour GNUplot\n");
-
     if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
       fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
       exit(21);

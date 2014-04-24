@@ -422,7 +422,6 @@ void print_counters(long long *values){
     printf("L3 total cache access %lld.\n", values[5]);
     printf("=> L3 cache hit rate %2.3f\n\n", ((double)values[4]/(double)values[5]) * 100);
     printf("Total cycles %lld\n", values[6]);
-    printf("%lld\n%lld\n%lld\n%lld\n%lld\n", values[0], values[1], values[2], values[3], values[4]);
     printf("============================================\n");
     printf("End \n");
     printf("============================================\n");

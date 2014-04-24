@@ -104,7 +104,7 @@ int main(int argc, char **argv){
     cpu_set_t mask;
 
     CPU_ZERO(&mask);
-    CPU_SET(2, &mask);
+    CPU_SET(atoi[2], &mask);
 
     if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
         fprintf(stderr, "Sched error: set affinity\n");
