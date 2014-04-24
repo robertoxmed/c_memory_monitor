@@ -23,6 +23,7 @@ Un coeurs doit être libre pour que l'OS puisse l'utiliser.<br>
 #### Compilation du projet
 
 Pour compiler le projet:<br>
+<code>git clone https://github.com/robertoxmed/psar.git</code><br>
 <code>make</code>
 
 #### Lancer le wrapper avec des arguments
@@ -35,15 +36,22 @@ Pour avoir de l'aide sur le wrapper:
 
 <code>./bin/papi_wrapper -h </code>
 
-#### Lancer l'hyperviseur avec des arguments
+#### Lancer le scheduler avec des arguments
 
-L'hyperviseur, comme le wrappeur, nécessite des droits de super utilisateur pour pouvoir attacher le set d'événements à un seul coeur. Il se charge aussi de lancer les tâches attaquantes. Par défaut la tâche temp-réel va effectuer 2000000 d'itérations.
+Le scheduler, comme le wrappeur, nécessite des droits de super utilisateur pour pouvoir attacher le set d'événements à un seul coeur. Il se charge aussi de lancer les tâches attaquantes. Par défaut la tâche temp-réel va effectuer 2000000 d'itérations.
 
-<code>sudo ./bin/papi_hypervisor bin/rt_task nb_attaquants</code>
+<code>sudo ./bin/papi_scheduler bin/rt_task nb_attaquants</code>
 
-Pour avoir de l'aide sur le wrapper:
+Pour avoir de l'aide sur le scheduler:
 
-<code>./bin/papi_hypervisor -h </code>
+<code>./bin/papi_scheduler -h </code>
+
+*Comportement du CPU:*
 
 ![Exemple d'éxécution](/doc/sar.png?raw=true "Exemple d'éxécution de l'hyperviseur")
+
+
+*Schéma du Scheduler*
+
+![Schema scheduler](/doc/papi_scheduler.png?raw=true "Schéma du scheduler")
 
