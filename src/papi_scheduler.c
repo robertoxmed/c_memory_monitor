@@ -2,7 +2,7 @@
 
 #define MEMORY_QUOTA 280000
 #define ITERATION_MODE "1"
-#define NB_RT_ITERATION "30000000"
+#define NB_RT_ITERATION "20000000"
 
 pid_t pid_attacker[2] = {-1, -1};
 int nb_attackers = 0, send = 0;
@@ -113,6 +113,7 @@ int main (int argc, char ** argv) {
                 perror("execl");
                 exit(17);
             }
+            exit(0);
         }
     }
 
@@ -149,8 +150,11 @@ int main (int argc, char ** argv) {
             exit(17);
         }
 
-	    execl(argv[1], "RT task", NB_RT_ITERATION, NULL);
-        
+	    if(execl(argv[1], "RT task", NB_RT_ITERATION, NULL) == -1){
+            fprintf(stderr, "Execl error: Couldn't launch RT exec\n");
+            exit(17);
+        }
+        exit(0);
     }else if(rt_child == -1){
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(16);
@@ -176,13 +180,18 @@ int main (int argc, char ** argv) {
         struct timeval  tv1, tv2;
         gettimeofday(&tv1, NULL);
 
+        // Wait for RT child to finish, then kill attackers
         ret = -1;
-        while(ret != rt_child){ //Wait for RT child to finish
+        while(ret != rt_child){ 
             ret = waitpid(rt_child, &status, 0);
         }
         if (!WIFEXITED(status)) {
             fprintf(stderr, "scheduler: Child exited with wrong status\n");
             exit(16);
+        }
+        for(i=0; i<nb_attackers; i++){
+            fprintf(stderr, "\nScheduler (%d) > Sending signal to %d\n", getpid(), pid_attacker[i]);
+            kill(pid_attacker[i], SIGKILL);
         }
 
         gettimeofday(&tv2, NULL);
@@ -196,6 +205,25 @@ int main (int argc, char ** argv) {
             (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
             (double) (tv2.tv_sec - tv1.tv_sec));
 
+        // Stopping and reading for Gnuplot
+        if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
+            exit(17);
+        }
+        if((ret = PAPI_stop(scheduler_eventset, &scheduler_value))!= PAPI_OK){
+            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
+            exit(17);
+        }
+
+        if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
+            fprintf(stderr, "PAPI error : Couldn't read the values %s\n", PAPI_strerror(ret));
+            exit(18);
+        }
+
+        // Printing and writting for Gnuplot
+        print_counters(papi_values);
+        write_miss_values(papi_values);
+
         // Writting the time for Gnuplot
         int fic_time;
         if ((fic_time = open("./plot/mesures_execution.data", O_RDWR | O_APPEND))==-1){
@@ -208,24 +236,6 @@ int main (int argc, char ** argv) {
             exit(20);
         }
 
-        // Stopping and reading for Gnuplot
-        if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
-            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
-            exit(17);
-        }
-        if((ret = PAPI_stop(scheduler_eventset, &scheduler_value))!= PAPI_OK){
-            fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
-            exit(17);
-        }
-
-        if((ret = PAPI_read(PAPI_EventSet, papi_values)) != PAPI_OK){
-            fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
-            exit(18);
-        }
-
-        // Printing and writting for Gnuplot
-        print_counters(papi_values);
-        write_miss_values(papi_values);
 
         // Cleaning event sets
         if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
@@ -244,11 +254,7 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
             exit(20);
         }
+    }
 
-    }
-    for(i=0; i<nb_attackers; i++){
-        kill(pid_attacker[i], SIGINT);
-    }
-    
     return EXIT_SUCCESS;
 }
