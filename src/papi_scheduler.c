@@ -1,6 +1,6 @@
 #include "../include/papi_util.h"
 
-#define MEMORY_QUOTA 280000
+#define MEMORY_QUOTA 129000
 #define ITERATION_MODE "1"
 #define NB_RT_ITERATION "20000000"
 

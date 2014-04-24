@@ -15,11 +15,11 @@ if [ $nb_attack -gt 2 ]; then
 	do
 		sudo ./bin/papi_scheduler bin/rt_task 2;
 	done
-elif [ $nb_attack -eq 1 ] || [ $nb_attack -eq 2 ]; then
+elif [ $nb_attack -eq 0 ] ||  [ $nb_attack -eq 1 ] || [ $nb_attack -eq 2 ]; then
 	for ((i=0; i < 10; i++));
 	do
 		sudo ./bin/papi_scheduler bin/rt_task $nb_attack;
-		sleep(1);
+		sleep 1
 	done
 fi
 
