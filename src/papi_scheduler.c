@@ -1,8 +1,8 @@
 #include "../include/papi_util.h"
 
-#define MEMORY_QUOTA 5600000
+#define MEMORY_QUOTA 280000
 #define ITERATION_MODE "1"
-#define NB_RT_ITERATION "20000000"
+#define NB_RT_ITERATION "30000000"
 
 pid_t pid_attacker[2] = {-1, -1};
 int nb_attackers = 0, send = 0;
@@ -14,15 +14,15 @@ void timer_handler(int signo, siginfo_t *info, void *context){
 	int i, ret;
 	//Read the values with PAPI
 	if(signo == SIGRTMIN){
-        hypervisor_value = 0;
+        scheduler_value = 0;
 
-        if((ret = PAPI_accum(hypervisor_eventset, &hypervisor_value)) != PAPI_OK){
+        if((ret = PAPI_accum(scheduler_eventset, &scheduler_value)) != PAPI_OK){
     		fprintf(stderr, "PAPI error: Couldn't read the values %s\n", PAPI_strerror(ret));
     		exit(20);
     	}
     	//Test the quota and send the sigstop
-        fprintf(stderr, "%lld\n", hypervisor_value);
-    	rt_quota_l3 -= hypervisor_value;
+        //fprintf(stderr, "%lld\n", scheduler_value);
+    	rt_quota_l3 -= scheduler_value;
 
     	if((rt_quota_l3 <= 0) && (send == 0)){
             fprintf(stderr, "Quota exceeded will stop attackers\n");
@@ -55,15 +55,15 @@ int main (int argc, char ** argv) {
     struct sched_param s_param;
     cpu_set_t mask;
 
-    hypervisor_check_arguments(argc, argv);
+    scheduler_check_arguments(argc, argv);
     
     //--------------------------------PAPI initilization------------------------------//
     init_papi();
-    hypervisor_init_papi();
+    scheduler_init_papi();
     set_option();
-    hypervisor_set_option();
+    scheduler_set_option();
     add_events();
-    hypervisor_add_event();
+    scheduler_add_event();
 
     //---------------------------Timer initialization and sigaction----------------------//
     sa.sa_flags = SA_SIGINFO;
@@ -155,7 +155,7 @@ int main (int argc, char ** argv) {
 		fprintf(stderr, "Fork: couldn't create the RT child.\n");
 		exit(16);
 /**********************************************************************************************/
-    //The Hypervisor        
+    //The scheduler        
 	}else{
         sleep(1); //<= Waiting for stationnary period
         if(timer_settime(tid, 0, &new_tmr, NULL) == -1){
@@ -168,7 +168,7 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(16);
         }
-        if((ret = PAPI_start(hypervisor_eventset)) != PAPI_OK){
+        if((ret = PAPI_start(scheduler_eventset)) != PAPI_OK){
             fprintf(stderr, "PAPI error: failed to start counters: %s\n", PAPI_strerror(ret));
             exit(16);
         }
@@ -181,7 +181,7 @@ int main (int argc, char ** argv) {
             ret = waitpid(rt_child, &status, 0);
         }
         if (!WIFEXITED(status)) {
-            fprintf(stderr, "Hypervisor: Child exited with wrong status\n");
+            fprintf(stderr, "scheduler: Child exited with wrong status\n");
             exit(16);
         }
 
@@ -195,7 +195,7 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
             exit(17);
         }
-        if((ret = PAPI_stop(hypervisor_eventset, &hypervisor_value))!= PAPI_OK){
+        if((ret = PAPI_stop(scheduler_eventset, &scheduler_value))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
             exit(17);
         }
@@ -211,7 +211,7 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
             exit(19);
         }
-        if((ret=PAPI_cleanup_eventset(hypervisor_eventset))!=PAPI_OK){
+        if((ret=PAPI_cleanup_eventset(scheduler_eventset))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
             exit(19);
         }
@@ -219,7 +219,7 @@ int main (int argc, char ** argv) {
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
             exit(20);
         }
-        if((ret=PAPI_destroy_eventset(&hypervisor_eventset))!=PAPI_OK){
+        if((ret=PAPI_destroy_eventset(&scheduler_eventset))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't destroy the Event Set %s\n", PAPI_strerror(ret));
             exit(20);
         }

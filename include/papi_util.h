@@ -14,8 +14,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-extern int hypervisor_eventset;
-extern long long hypervisor_value; //The number of memory accesses
+extern int scheduler_eventset;
+extern long long scheduler_value; //The number of memory accesses
 
 extern long long papi_values[7];
 extern int PAPI_EventSet;
@@ -37,12 +37,12 @@ void set_option();
 void add_events();
 void write_miss_values(long long *values);
  
-// Used by PAPI Hypervisor
-void hypervisor_check_arguments(int argc, char **argv);
-void hypervisor_print_help();
-void hypervisor_init_papi();
-void hypervisor_set_option();
-void hypervisor_add_event();
+// Used by PAPI Scheduler
+void scheduler_check_arguments(int argc, char **argv);
+void scheduler_print_help();
+void scheduler_init_papi();
+void scheduler_set_option();
+void scheduler_add_event();
 
 // Used by PAPI Notifier
 void notifier_check_arguments(int argc, char **argv);

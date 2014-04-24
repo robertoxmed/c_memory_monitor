@@ -3,9 +3,9 @@
 long long papi_values[7];
 int PAPI_EventSet = PAPI_NULL;
 
-// Variables used by the hypervisor
-int hypervisor_eventset = PAPI_NULL;
-long long hypervisor_value; //The number of memory accesses
+// Variables used by the scheduler
+int scheduler_eventset = PAPI_NULL;
+long long scheduler_value; //The number of memory accesses
 
 // Variables used by the notificator
 int notifier_eventset_rt = PAPI_NULL;
@@ -27,12 +27,12 @@ void print_help(){
     printf("===========================================\n");
 }
 
-void hypervisor_print_help(){
+void scheduler_print_help(){
     printf("===========================================\n");
-    printf("PAPI Hypervisor Help:\n");
+    printf("PAPI scheduler Help:\n");
     printf("===========================================\n");    
     printf("Example of execution:\n");
-    printf("sudo ./papi_hypervisor <rt_task> <nb attackers>\n\n");
+    printf("sudo ./papi_scheduler <rt_task> <nb attackers>\n\n");
     printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("All the attackers will be in the other cores. One core should be free for the OS.\n");
     printf("The cores should be isolated using [isolcpus] as Kernel command.\n");
@@ -67,13 +67,13 @@ void check_arguments (int argc, char ** argv){
     }
 }
 
-void hypervisor_check_arguments(int argc, char **argv){
+void scheduler_check_arguments(int argc, char **argv){
     if(argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help")) == 0){
-        hypervisor_print_help();
+        scheduler_print_help();
         exit(0);
     }else if(argc == 3){
         printf("============================================\n");
-        printf("PAPI Hypervisor Execution:\n\n");
+        printf("PAPI scheduler Execution:\n\n");
         printf("Launching the wrapper with %s as the RT task.\n", argv[1]);
         printf("============================================\n");
     }else{
@@ -132,19 +132,19 @@ void init_papi(){
     }
 }
 
-// The hypervisor has one event set to count memory accesses
-void hypervisor_init_papi(){
+// The scheduler has one event set to count memory accesses
+void scheduler_init_papi(){
     int retval;
-    if((retval=PAPI_create_eventset (&hypervisor_eventset)) != PAPI_OK){
+    if((retval=PAPI_create_eventset (&scheduler_eventset)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't create the Event Set: %s.\nWill now exit.\n", PAPI_strerror(retval));
         exit(4);
     }
 
-    if ((retval=PAPI_assign_eventset_component(hypervisor_eventset, 0)) != PAPI_OK){
+    if ((retval=PAPI_assign_eventset_component(scheduler_eventset, 0)) != PAPI_OK){
         fprintf(stderr, "PAPI error: component: %s\n", PAPI_strerror(retval));
         exit(5);
     }
-    if((retval=PAPI_set_multiplex(hypervisor_eventset)) != PAPI_OK){
+    if((retval=PAPI_set_multiplex(scheduler_eventset)) != PAPI_OK){
         fprintf(stderr, "PAPI error: couldn't set multiplexing %s\n", PAPI_strerror(retval));
         exit(6);
     }
@@ -229,13 +229,13 @@ void set_option(){
 	}
 }
 
-void hypervisor_set_option(){
+void scheduler_set_option(){
     int retval;
 
     //Setting the granularity for the events only the RT core is interesting
     PAPI_domain_option_t domain_opt;
     domain_opt.def_cidx = 0;
-    domain_opt.eventset = hypervisor_eventset;
+    domain_opt.eventset = scheduler_eventset;
     domain_opt.domain = PAPI_DOM_ALL;
 
     if((retval = PAPI_set_opt(PAPI_DOMAIN, (PAPI_option_t*)&domain_opt)) != PAPI_OK){
@@ -245,7 +245,7 @@ void hypervisor_set_option(){
 
     PAPI_granularity_option_t gran_opt;
     gran_opt.def_cidx = 0;
-    gran_opt.eventset = hypervisor_eventset;
+    gran_opt.eventset = scheduler_eventset;
     gran_opt.granularity = PAPI_GRN_SYS;
 
     if((retval = PAPI_set_opt(PAPI_GRANUL, (PAPI_option_t*)&gran_opt)) != PAPI_OK){
@@ -254,7 +254,7 @@ void hypervisor_set_option(){
     }
 
     PAPI_cpu_option_t cpu_opt;
-    cpu_opt.eventset = hypervisor_eventset;
+    cpu_opt.eventset = scheduler_eventset;
     cpu_opt.cpu_num = 1;
 
     if((retval = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&cpu_opt)) != PAPI_OK){
@@ -378,12 +378,12 @@ void add_events(){
 }
 
 
-void hypervisor_add_event(){
+void scheduler_add_event(){
     int retval;
 
-    if((retval = PAPI_add_event(hypervisor_eventset, PAPI_L3_TCM)) != PAPI_OK){
+    if((retval = PAPI_add_event(scheduler_eventset, PAPI_L3_TCM)) != PAPI_OK){
         fprintf(stderr, "PAPI error: can't add L3 TCM to event set %s\n", PAPI_strerror(retval));
-        fprintf(stderr, "Can't continue: Hypervisor needs memory access.\n");
+        fprintf(stderr, "Can't continue: scheduler needs memory access.\n");
         exit(15);
     }
 }
