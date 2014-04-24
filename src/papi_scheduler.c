@@ -187,10 +187,28 @@ int main (int argc, char ** argv) {
 
         gettimeofday(&tv2, NULL);
 
+        char time_to_char[20];
         printf ("\nTotal time = %f seconds\n",
                  (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
                  (double) (tv2.tv_sec - tv1.tv_sec));
 
+        sprintf(time_to_char, "%f\n", 
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
+
+        // Writting the time for Gnuplot
+        int fic_time;
+        if ((fic_time = open("./plot/mesures_execution.data", O_RDWR | O_APPEND))==-1){
+            perror("Open error on fic_time\n");
+            exit(19); 
+        }
+        
+        if (write(fic_time, time_to_char, strlen(time_to_char))==0){
+            fprintf(stderr, "Write exec_time error\n");
+            exit(20);
+        }
+
+        // Stopping and reading for Gnuplot
         if((ret = PAPI_stop(PAPI_EventSet, papi_values))!= PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't stop the counters %s\n", PAPI_strerror(ret));
             exit(17);
@@ -205,8 +223,11 @@ int main (int argc, char ** argv) {
             exit(18);
         }
 
+        // Printing and writting for Gnuplot
         print_counters(papi_values);
-        
+        write_miss_values(papi_values);
+
+        // Cleaning event sets
         if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
             fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));
             exit(19);

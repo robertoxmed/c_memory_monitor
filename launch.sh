@@ -1,37 +1,28 @@
 #!/bin/bash
 
-make
+echo "Y" > plot/mesures_execution.data
+echo "Y" > plot/mesures_miss_L1.data
+echo "Y" > plot/mesures_miss_L2.data
+echo "Y" > plot/mesures_miss_L3.data
 
 if [[ $EUID -ne 0 ]]; then
 	echo "This script must be run as root" 1>&2
 	exit 1
 fi
 
-echo "Enter the number of attacking tasks: "
+echo "How many attackers?"
 read nb_attack
 
 if [ $nb_attack -gt 2 ]; then
 	echo "Number of attackers is limted to 2"
 	echo "Will launch 2 instances of the attacker"
-	./bin/attack_task2 1 &
-	./bin/attack_task2 1 &
+	for ((i=1; i < 20; i++)) do
+		sudo ./bin/papi_scheduler bin/rt_task 2
+	done
 elif [ $nb_attack -eq 1 ] || [ $nb_attack -eq 2 ]; then
-	for ((i=1; i<$nb_attack; i++)) do
-		./bin/attack_task 1 &
+	for ((i=1; i < 20; i++)) do
+		sudo ./bin/papi_scheduler bin/rt_task 2
 	done
 fi
 
-sudo ./bin/papi_wrapper bin/rt_task 50000
-cat plot/mesures_execution.conf | gnuplot
-
-echo "L1 Cache Miss"
-cat plot/mesures_miss_L1.conf | gnuplot    
-cat plot/mesures_miss_L1_som.conf | gnuplot
-
-echo "L2 Cache Miss"
-cat plot/mesures_miss_L2.conf | gnuplot    
-cat plot/mesures_miss_L2_som.conf | gnuplot
-
-echo "L3 Cache Miss"
-cat plot/mesures_miss_L3.conf | gnuplot    
-cat plot/mesures_miss_L3_som.conf | gnuplot
+echo "Files are ready for Gnuplot"
