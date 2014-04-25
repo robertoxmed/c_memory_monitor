@@ -1,0 +1,24 @@
+#! /bin/bash
+
+echo "-----------------"
+echo "     Graphic     "     
+echo "-----------------"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+echo "------------------"
+echo "     Cleaning     "
+echo "------------------"
+
+./clean_gnuplot.sh     
