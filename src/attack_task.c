@@ -59,11 +59,19 @@ void attack_list_add_n_elt(attack_list *al){
     }
 }
 
-void attack_element_print(attack_element *ae){
-    int i, j;
+void attack_element_print(attack_list *al, attack_element *ae){
+    int i, j, k;
+    attack_element ae_tmp;
+    attack_element *ae_tmp2;
     printf("-----------------\n");
     for(i=0;i<SIZE;i++){
         for(j=0;j<SIZE;j++){
+            k = (int)(rand()%INDEX_SIZE);
+            ae_tmp2 = al->al_index[k];
+            memcpy(ae_tmp.ae_mat, ae->ae_mat, sizeof(ae->ae_mat));
+            memcpy(ae->ae_mat, ae_tmp2->ae_mat, sizeof(ae->ae_mat));
+            memcpy(ae_tmp2->ae_mat, ae_tmp.ae_mat, sizeof(ae->ae_mat));
+            ae->ae_mat[i][j] += 10;
             printf("%g ",ae->ae_mat[i][j]);
         }
         printf("\n");
@@ -72,12 +80,25 @@ void attack_element_print(attack_element *ae){
 
 }
 
-void attack_list_iterate(attack_list *al){
+void attack_list_iterate(attack_list *al, attack_list *al_2){
     attack_element *iter;
+    attack_element *iter_2;
+
     while(1){
+        attack_list *al_3 = (attack_list*) malloc (sizeof(attack_list));
+        al_3->al_index = (attack_element**)malloc(INDEX_SIZE * sizeof(attack_element*));
+        attack_list_init(al_3);
         for(iter = al->al_head; iter; iter = iter->ae_next){
-            attack_element_print(iter);
+            for(iter_2 = al_2->al_head; iter_2; iter_2 = iter_2->ae_next){
+                attack_element *iter_3;
+                iter_3 = (attack_element*) malloc (sizeof(attack_element));
+                memcpy(iter_3, iter, sizeof(attack_element));
+                attack_list_add_elt(al_3, iter_3);
+                attack_element_print(al, iter);
+                attack_element_print(al_2, iter_2);
+            }
         }
+        attack_list_destroy(al_3);
     }
 }
 
@@ -91,7 +112,7 @@ void attack_list_rand_iterate(attack_list *al){
 
         attack_element *iter = al->al_index[i];
         while((cpt != k) && (iter != NULL)){
-            attack_element_print(iter);
+            attack_element_print(al, iter);
             iter = iter->ae_next;
             cpt++;
         }
@@ -113,13 +134,17 @@ int main(int argc, char **argv){
         exit(16);
     }
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
+    attack_list *al_2 = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
+    al_2->al_index = (attack_element**)malloc(INDEX_SIZE * sizeof(attack_element*));
     
     //Add the process to the table used by the hypervisor    
     attack_list_init(al);
-    fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
+    attack_list_init(al_2);
+    fprintf(stderr, "Attack task (%d) > al->nb_elts %d\n", getpid(), al->al_nb_elements);
     attack_list_add_n_elt(al);
-    fprintf(stderr, "Allocation done: Al->nb_elts %d\n", al->al_nb_elements);
+    attack_list_add_n_elt(al_2);
+    fprintf(stderr, "Attack task (%d) > Allocation done: al->nb_elts %d\n", getpid(), al->al_nb_elements);
 
     if(argc == 3){
         if(atoi(argv[1]) == 1){
@@ -127,14 +152,15 @@ int main(int argc, char **argv){
             attack_list_rand_iterate(al);
         }else{
             fprintf(stderr, "Attacker will use linear iteration\n");
-            attack_list_iterate(al);
+            attack_list_iterate(al, al_2);
         }
     }else{
         fprintf(stderr, "Attacker will use linear iteration\n");
-        attack_list_iterate(al);
+        attack_list_iterate(al, al_2);
     }
 
     attack_list_destroy(al);
+    attack_list_destroy(al_2);
 
 
     return EXIT_SUCCESS;

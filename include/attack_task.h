@@ -7,8 +7,8 @@
 #include <string.h>
 #include <time.h>
 
-#define SIZE 3
-#define INDEX_SIZE 4000000
+#define SIZE 10
+#define INDEX_SIZE 900000
 
 struct attack_element_t{
 	double ae_mat[SIZE][SIZE];
@@ -37,7 +37,7 @@ void attack_list_add_elt(attack_list *al, attack_element *ae);
 
 void attack_list_add_n_elt(attack_list *al);
 
-void attack_list_iterate(attack_list *al);
+void attack_list_iterate(attack_list *al, attack_list *al_2);
 
 void attack_list_rand_iterate(attack_list *al);
 

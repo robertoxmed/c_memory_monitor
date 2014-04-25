@@ -1,7 +1,7 @@
 #include "../include/papi_util.h"
 
 #define MEMORY_QUOTA 129000
-#define ITERATION_MODE "1"
+#define ITERATION_MODE "0"
 #define NB_RT_ITERATION "20000000"
 
 pid_t pid_attacker[2] = {-1, -1};
