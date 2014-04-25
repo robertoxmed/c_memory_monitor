@@ -3,15 +3,11 @@
 echo "**************************************"
 echo "         PSAR: Benchmarking           "
 echo "**************************************"
-
-#if [[ $EUID -ne 0 ]]; then
-#	echo "This script must be run as root" 1>&2
-#	exit 1
-#fi
-
+echo ""
 echo "This shell script will launch the wrapper and the scheduler 50 times."
 echo "This RT task is set to make 2'000.000 iterations. The attackers will use
 random iteration."
+echo ""
 
 make
 
@@ -19,7 +15,7 @@ echo "**************************************"
 echo "       Wrapper with 0 attackers       "
 echo "**************************************"
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 0; i++));
 do
 	sudo ./bin/papi_wrapper bin/rt_task 0
 done
@@ -28,7 +24,7 @@ echo "**************************************"
 echo "       Wrapper with 1 attacker        "
 echo "**************************************"
 
-gnome-terminal -e "./bin/attack_task 0 2"
+xterm -hold -e "./bin/attack_task 1 2" &
 sleep 5
 
 for ((i=0; i < 10; i++));
@@ -40,7 +36,7 @@ echo "**************************************"
 echo "       Wrapper with 2 attackers       "
 echo "**************************************"
 
-gnome-terminal -e "./bin/attack_task 0 3"
+xterm -hold -e "./bin/attack_task 1 3" &
 sleep 5
 
 for ((i=0; i < 10; i++));
@@ -63,8 +59,6 @@ echo "**************************************"
 echo "      Scheduler with 1 attacker       "
 echo "**************************************"
 
-./bin/attack_task 1 & >/dev/null 2>&1
-
 for ((i=0; i < 10; i++));
 do
 	sudo ./bin/papi_scheduler bin/rt_task 1
@@ -73,8 +67,6 @@ done
 echo "**************************************"
 echo "     Scheduler with 2 attackers       "
 echo "**************************************"
-
-./bin/attack_task 1 & >/dev/null 2>&1
 
 for ((i=0; i < 10; i++));
 do

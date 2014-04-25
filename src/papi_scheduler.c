@@ -109,7 +109,7 @@ int main (int argc, char ** argv) {
                 fprintf(stderr, "Sched error: set affinity\n");
                 exit(16);
             }
-            if(execl("bin/attack_task2", "Attack task", ITERATION_MODE, NULL) == -1){
+            if(execl("/usr/bin/xterm", "xterm", "-hold","-e", "./bin/attack_task", NULL) == -1){
                 perror("execl");
                 exit(17);
             }
@@ -117,10 +117,7 @@ int main (int argc, char ** argv) {
         }
     }
 
-    for(i=0; i < nb_attackers; i++){ //Wait for allocation of the attackers
-        pause();
-    }
-
+    sleep(5);
 /**********************************************************************************************/
 
 /**********************************************************************************************/

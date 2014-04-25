@@ -141,7 +141,7 @@ int main(int argc, char **argv){
     //Add the process to the table used by the hypervisor    
     attack_list_init(al);
     attack_list_init(al_2);
-    fprintf(stderr, "Attack task (%d) > al->nb_elts %d\n", getpid(), al->al_nb_elements);
+    fprintf(stderr, "Attack task (%d) > al->nb_elts %d In core %d\n", getpid(), al->al_nb_elements, atoi(argv[2]));
     attack_list_add_n_elt(al);
     attack_list_add_n_elt(al_2);
     fprintf(stderr, "Attack task (%d) > Allocation done: al->nb_elts %d\n", getpid(), al->al_nb_elements);
