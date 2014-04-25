@@ -113,7 +113,7 @@ int main (int argc, char ** argv) {
 
     close(fic_time);
 
-    write_miss_values(papi_values);
+    write_miss_values(0, atoi(argv[2]), papi_values);
 
     if((ret=PAPI_cleanup_eventset(PAPI_EventSet))!=PAPI_OK){
       fprintf(stderr, "PAPI error: Couldn't clean the Event Set %s\n", PAPI_strerror(ret));

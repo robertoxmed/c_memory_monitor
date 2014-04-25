@@ -219,7 +219,7 @@ int main (int argc, char ** argv) {
 
         // Printing and writting for Gnuplot
         print_counters(papi_values);
-        write_miss_values(papi_values);
+        write_miss_values(1, nb_attackers, papi_values);
 
         // Writting the time for Gnuplot
         int fic_time;

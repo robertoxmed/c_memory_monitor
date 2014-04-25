@@ -428,17 +428,58 @@ void print_counters(long long *values){
 }
 
 
-void write_miss_values(long long *values){
+void write_miss_values(int type, int nb_attackers, long long *values){
 
     int fic_miss;
     char values_to_char[3][40];
+    char file_names[3][80];
 
     sprintf(values_to_char[0],"%lld\n", values[0] + values[1]);
     sprintf(values_to_char[1],"%lld\n", values[2] + values[3]);
     sprintf(values_to_char[2],"%lld\n", values[4]);
 
+    /* Tyope 0 => Wrapper. Writting in files for the wrapper */
+    if(type == 0){
+        switch(nb_attackers){
+            case 0:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_0_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_0_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_0_wrapper.data");
+            break;
+            case 1:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_1_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_1_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_1_wrapper.data");
+            break;
+            case 2:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_2_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_2_wrapper.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_2_wrapper.data");
+            break;
+        }
+
+    }else{
+         switch(nb_attackers){
+            case 0:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_0_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_0_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_0_scheduler.data");
+            break;
+            case 1:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_1_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_1_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_1_scheduler.data");
+            break;
+            case 2:
+                strcpy(file_names[0], "./plot/mesures_miss_L1_2_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L2_2_scheduler.data");
+                strcpy(file_names[1], "./plot/mesures_miss_L3_2_scheduler.data");
+            break;
+        }
+    }
+
     /*Ecriture des miss L1*/
-    if (( fic_miss = open("./plot/mesures_miss_L1.data", O_RDWR | O_APPEND))==-1){
+    if (( fic_miss = open(file_names[0], O_RDWR | O_APPEND))==-1){
         fprintf(stderr, "Open error on fic_miss L1 data\n");
         exit(17);	
     }
@@ -450,7 +491,7 @@ void write_miss_values(long long *values){
     close(fic_miss);
 
     /*Ecriture des miss L2*/
-    if (( fic_miss = open("./plot/mesures_miss_L2.data", O_RDWR | O_APPEND))==-1){
+    if (( fic_miss = open(file_names[1], O_RDWR | O_APPEND))==-1){
         fprintf(stderr, "Open error on fic_miss L2 data\n");
         exit(20);	
     }
@@ -463,7 +504,7 @@ void write_miss_values(long long *values){
     close(fic_miss);
 
     /*Ecriture des miss L3*/
-    if (( fic_miss = open("./plot/mesures_miss_L3.data", O_RDWR | O_APPEND))==-1){
+    if (( fic_miss = open(file_names[2], O_RDWR | O_APPEND))==-1){
         fprintf(stderr, "Open error on fic_miss L3 data\n");
         exit(23);	
     }

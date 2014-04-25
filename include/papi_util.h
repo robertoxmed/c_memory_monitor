@@ -35,7 +35,7 @@ void print_help();
 void print_counters(long long *values);
 void set_option();
 void add_events();
-void write_miss_values(long long *values);
+void write_miss_values(int type, int nb_attackers, long long *values);
  
 // Used by PAPI Scheduler
 void scheduler_check_arguments(int argc, char **argv);
