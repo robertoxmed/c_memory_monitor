@@ -28,7 +28,8 @@ echo "**************************************"
 echo "       Wrapper with 1 attacker        "
 echo "**************************************"
 
-./bin/attack_task 1 2 & >/dev/null 2>&1
+./bin/attack_task 0 2 > /dev/null &
+sleep 4
 
 for ((i=0; i < 50; i++));
 do
@@ -39,14 +40,15 @@ echo "**************************************"
 echo "       Wrapper with 2 attackers       "
 echo "**************************************"
 
-./bin/attack_task 1 3 & >/dev/null 2>&1
+./bin/attack_task 0 3 > /dev/null &
+sleep 4
 
 for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_wrapper bin/rt_task 2
 done
 
-killall attack_task
+sudo killall attack_task
 
 echo "**************************************"
 echo "      Scheduler with 0 attackers      "

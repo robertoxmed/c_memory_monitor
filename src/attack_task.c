@@ -74,8 +74,10 @@ void attack_element_print(attack_element *ae){
 
 void attack_list_iterate(attack_list *al){
     attack_element *iter;
-    for(iter = al->al_head; iter; iter = iter->ae_next){
-        attack_element_print(iter);
+    while(1){
+        for(iter = al->al_head; iter; iter = iter->ae_next){
+            attack_element_print(iter);
+        }
     }
 }
 
@@ -84,7 +86,7 @@ void attack_list_rand_iterate(attack_list *al){
     while(1){
         srand(getpid()+i);
         i = (int)(rand()%al->al_nb_elements);
-        k = (int)(rand()%10) + 1;
+        k = (int)(rand()%100) + 1;
         printf("I = %d, K = %d\n", i, k);
 
         attack_element *iter = al->al_index[i];
@@ -104,7 +106,7 @@ int main(int argc, char **argv){
     cpu_set_t mask;
 
     CPU_ZERO(&mask);
-    CPU_SET(atoi[2], &mask);
+    CPU_SET(atoi(argv[2]), &mask);
 
     if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
         fprintf(stderr, "Sched error: set affinity\n");
@@ -118,21 +120,17 @@ int main(int argc, char **argv){
     fprintf(stderr, "Al->nb_elts %d\n", al->al_nb_elements);
     attack_list_add_n_elt(al);
     fprintf(stderr, "Allocation done: Al->nb_elts %d\n", al->al_nb_elements);
-    sleep(2);
 
-    if(argc == 2){
+    if(argc == 3){
         if(atoi(argv[1]) == 1){
             fprintf(stderr, "Attacker will use random iteration\n");
-            sleep(3);
             attack_list_rand_iterate(al);
         }else{
             fprintf(stderr, "Attacker will use linear iteration\n");
-            sleep(3);
             attack_list_iterate(al);
         }
     }else{
         fprintf(stderr, "Attacker will use linear iteration\n");
-        sleep(3);
         attack_list_iterate(al);
     }
 
