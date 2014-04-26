@@ -15,7 +15,7 @@ echo "**************************************"
 echo "       Wrapper with 0 attackers       "
 echo "**************************************"
 
-for ((i=0; i < 0; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_wrapper bin/rt_task 0
 done
@@ -27,7 +27,7 @@ echo "**************************************"
 xterm -hold -e "./bin/attack_task 1 2" &
 sleep 5
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_wrapper bin/rt_task 1
 done
@@ -36,10 +36,10 @@ echo "**************************************"
 echo "       Wrapper with 2 attackers       "
 echo "**************************************"
 
-xterm -hold -e "./bin/attack_task 1 3" &
+./bin/attack_task 1 3 &
 sleep 5
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_wrapper bin/rt_task 2
 done
@@ -50,7 +50,7 @@ echo "**************************************"
 echo "      Scheduler with 0 attackers      "
 echo "**************************************"
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_scheduler bin/rt_task 0
 done
@@ -59,7 +59,7 @@ echo "**************************************"
 echo "      Scheduler with 1 attacker       "
 echo "**************************************"
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_scheduler bin/rt_task 1
 done
@@ -68,7 +68,7 @@ echo "**************************************"
 echo "     Scheduler with 2 attackers       "
 echo "**************************************"
 
-for ((i=0; i < 10; i++));
+for ((i=0; i < 50; i++));
 do
 	sudo ./bin/papi_scheduler bin/rt_task 2
 done

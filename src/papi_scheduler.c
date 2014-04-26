@@ -94,30 +94,38 @@ int main (int argc, char ** argv) {
     printf("Launching %d attackers\n", atoi(argv[2]));
     for(i=0; i < atoi(argv[2]); i++){
         if((pid_attacker[nb_attackers++] = fork()) == 0){
-            int stdin_fd = -1;
+            //int stdin_fd = -1;
 
             CPU_ZERO(&mask);
             CPU_SET(i+2, &mask);
-            stdin_fd = open("/dev/null", O_RDONLY);
+            printf("Core %d\n", i+2);
+
+            /*stdin_fd = open("/dev/null", O_RDONLY);
 
             if(stdin_fd == -1)
                 exit(127);
             dup2(stdin_fd, 1);
-            close(stdin_fd);
+            close(stdin_fd);*/
 
             if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
                 fprintf(stderr, "Sched error: set affinity\n");
                 exit(16);
             }
-            if(execl("/usr/bin/xterm", "xterm", "-hold","-e", "./bin/attack_task", NULL) == -1){
+            char c[2];
+            sprintf(c, "%d", i+2);
+
+            if(execl("/usr/bin/xterm", "xterm", "-hold", "-e", "./bin/attack_task", "1", c, NULL) == -1){
+            	exit(17);
+            }
+            /*if(execl("./bin/attack_task2", "attack_task", ITERATION_MODE, NULL) == -1){
                 perror("execl");
                 exit(17);
-            }
+            }*/
             exit(0);
         }
     }
 
-    sleep(5);
+    sleep(10);
 /**********************************************************************************************/
 
 /**********************************************************************************************/
@@ -176,7 +184,6 @@ int main (int argc, char ** argv) {
 
         struct timeval  tv1, tv2;
         gettimeofday(&tv1, NULL);
-
         // Wait for RT child to finish, then kill attackers
         ret = -1;
         while(ret != rt_child){ 
@@ -227,16 +234,16 @@ int main (int argc, char ** argv) {
 
         switch(atoi(argv[2])){
             case 0:
-                strcpy(fic_name, "./plot/mesures_execution_0_scheduler.data");
+                strcpy(fic_name, "plot/mesures_execution_0_scheduler.data");
                 break;
             case 1:
-                strcpy(fic_name, "./plot/mesures_execution_1_scheduler.data");
+                strcpy(fic_name, "plot/mesures_execution_1_scheduler.data");
                 break;
             case 2:
-                strcpy(fic_name, "./plot/mesures_execution_2_scheduler.data");
+                strcpy(fic_name, "plot/mesures_execution_2_scheduler.data");
                 break;
             default:
-                strcpy(fic_name, "./plot/mesures_execution.data");
+                strcpy(fic_name, "plot/mesures_execution.data");
                 break;
         }
 

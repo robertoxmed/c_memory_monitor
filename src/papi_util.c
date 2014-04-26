@@ -442,38 +442,38 @@ void write_miss_values(int type, int nb_attackers, long long *values){
     if(type == 0){
         switch(nb_attackers){
             case 0:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_0_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_0_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_0_wrapper.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_0_wrapper.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_0_wrapper.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_0_wrapper.data");
             break;
             case 1:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_1_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_1_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_1_wrapper.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_1_wrapper.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_1_wrapper.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_1_wrapper.data");
             break;
             case 2:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_2_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_2_wrapper.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_2_wrapper.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_2_wrapper.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_2_wrapper.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_2_wrapper.data");
             break;
         }
 
     }else{
          switch(nb_attackers){
             case 0:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_0_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_0_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_0_scheduler.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_0_scheduler.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_0_scheduler.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_0_scheduler.data");
             break;
             case 1:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_1_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_1_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_1_scheduler.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_1_scheduler.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_1_scheduler.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_1_scheduler.data");
             break;
             case 2:
-                strcpy(file_names[0], "./plot/mesures_miss_L1_2_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L2_2_scheduler.data");
-                strcpy(file_names[1], "./plot/mesures_miss_L3_2_scheduler.data");
+                strcpy(file_names[0], "plot/mesures_miss_L1_2_scheduler.data");
+                strcpy(file_names[1], "plot/mesures_miss_L2_2_scheduler.data");
+                strcpy(file_names[2], "plot/mesures_miss_L3_2_scheduler.data");
             break;
         }
     }

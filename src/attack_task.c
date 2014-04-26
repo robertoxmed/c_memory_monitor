@@ -155,8 +155,8 @@ int main(int argc, char **argv){
             attack_list_iterate(al, al_2);
         }
     }else{
-        fprintf(stderr, "Attacker will use linear iteration\n");
-        attack_list_iterate(al, al_2);
+        fprintf(stderr, "Attacker will use random iteration\n");
+        attack_list_rand_iterate(al);
     }
 
     attack_list_destroy(al);

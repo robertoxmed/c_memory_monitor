@@ -89,16 +89,16 @@ int main (int argc, char ** argv) {
 
     switch(atoi(argv[2])){
       case 0:
-        strcpy(fic_name, "./plot/mesures_execution_0_wrapper.data");
+        strcpy(fic_name, "plot/mesures_execution_0_wrapper.data");
         break;
       case 1:
-        strcpy(fic_name, "./plot/mesures_execution_1_wrapper.data");
+        strcpy(fic_name, "plot/mesures_execution_1_wrapper.data");
         break;
       case 2:
-        strcpy(fic_name, "./plot/mesures_execution_2_wrapper.data");
+        strcpy(fic_name, "plot/mesures_execution_2_wrapper.data");
         break;
       default:
-        strcpy(fic_name, "./plot/mesures_execution.data");
+        strcpy(fic_name, "plot/mesures_execution.data");
         break;
     }
     if ((fic_time = open(fic_name, O_RDWR | O_APPEND))==-1){
