@@ -37,7 +37,7 @@ void attack_list_add_elt(attack_list *al, attack_element *ae);
 
 void attack_list_add_n_elt(attack_list *al);
 
-void attack_list_iterate(attack_list *al, attack_list *al_2);
+void attack_list_iterate(attack_list *al);
 
 void attack_list_rand_iterate(attack_list *al);
 

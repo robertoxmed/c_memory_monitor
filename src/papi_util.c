@@ -5,14 +5,13 @@ int PAPI_EventSet = PAPI_NULL;
 
 // Variables used by the scheduler
 int scheduler_eventset = PAPI_NULL;
-long long scheduler_value; //The number of memory accesses
+long long scheduler_value; // The number of memory accesses
 
 // Variables used by the notificator
 int notifier_eventset_rt = PAPI_NULL;
 int notifier_eventset_a0 = PAPI_NULL;
 int notifier_eventset_a1 = PAPI_NULL;
-//Number of memory accesses made by the tasks
-long long notifier_value_rt;
+long long notifier_value_rt; // Number of memory accesses made by the tasks
 long long notifier_value_a0;
 long long notifier_value_a1;
 
@@ -21,7 +20,7 @@ void print_help(){
     printf("PAPI Wrapper Help:\n");
     printf("===========================================\n");    
     printf("Example of execution:\n");
-    printf("sudo ./papi_wrapper <rt_task> <arg0>\n\n");
+    printf("sudo ./papi_wrapper <rt_task> <nb_attackers>\n\n");
     printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("The core should be isolated using [isolcpus] as Kernel command.\n");
     printf("===========================================\n");
@@ -32,7 +31,7 @@ void scheduler_print_help(){
     printf("PAPI scheduler Help:\n");
     printf("===========================================\n");    
     printf("Example of execution:\n");
-    printf("sudo ./papi_scheduler <rt_task> <nb attackers>\n\n");
+    printf("sudo ./papi_scheduler <rt_task> <nb_attackers>\n\n");
     printf("This program will isolate a real time task in the 2nd core of the processor.\n");
     printf("All the attackers will be in the other cores. One core should be free for the OS.\n");
     printf("The cores should be isolated using [isolcpus] as Kernel command.\n");
@@ -438,7 +437,7 @@ void write_miss_values(int type, int nb_attackers, long long *values){
     sprintf(values_to_char[1],"%lld\n", values[2] + values[3]);
     sprintf(values_to_char[2],"%lld\n", values[4]);
 
-    /* Tyope 0 => Wrapper. Writting in files for the wrapper */
+    /* Type 0 => Wrapper. Writting in files for the wrapper */
     if(type == 0){
         switch(nb_attackers){
             case 0:

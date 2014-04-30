@@ -80,25 +80,12 @@ void attack_element_print(attack_list *al, attack_element *ae){
 
 }
 
-void attack_list_iterate(attack_list *al, attack_list *al_2){
+void attack_list_iterate(attack_list *al){
     attack_element *iter;
-    attack_element *iter_2;
 
     while(1){
-        attack_list *al_3 = (attack_list*) malloc (sizeof(attack_list));
-        al_3->al_index = (attack_element**)malloc(INDEX_SIZE * sizeof(attack_element*));
-        attack_list_init(al_3);
-        for(iter = al->al_head; iter; iter = iter->ae_next){
-            for(iter_2 = al_2->al_head; iter_2; iter_2 = iter_2->ae_next){
-                attack_element *iter_3;
-                iter_3 = (attack_element*) malloc (sizeof(attack_element));
-                memcpy(iter_3, iter, sizeof(attack_element));
-                attack_list_add_elt(al_3, iter_3);
-                attack_element_print(al, iter);
-                attack_element_print(al_2, iter_2);
-            }
-        }
-        attack_list_destroy(al_3);
+        for(iter = al->al_head; iter; iter = iter->ae_next)
+            attack_element_print(al, iter);
     }
 }
 
@@ -134,16 +121,12 @@ int main(int argc, char **argv){
         exit(16);
     }
     attack_list *al = (attack_list*)malloc(sizeof(attack_list));
-    attack_list *al_2 = (attack_list*)malloc(sizeof(attack_list));
     al->al_index = (attack_element**)malloc(INDEX_SIZE *sizeof(attack_element*));
-    al_2->al_index = (attack_element**)malloc(INDEX_SIZE * sizeof(attack_element*));
     
     //Add the process to the table used by the hypervisor    
     attack_list_init(al);
-    attack_list_init(al_2);
     fprintf(stderr, "Attack task (%d) > al->nb_elts %d In core %d\n", getpid(), al->al_nb_elements, atoi(argv[2]));
     attack_list_add_n_elt(al);
-    attack_list_add_n_elt(al_2);
     fprintf(stderr, "Attack task (%d) > Allocation done: al->nb_elts %d\n", getpid(), al->al_nb_elements);
 
     if(argc == 3){
@@ -152,7 +135,7 @@ int main(int argc, char **argv){
             attack_list_rand_iterate(al);
         }else{
             fprintf(stderr, "Attacker will use linear iteration\n");
-            attack_list_iterate(al, al_2);
+            attack_list_iterate(al);
         }
     }else{
         fprintf(stderr, "Attacker will use random iteration\n");
@@ -160,8 +143,6 @@ int main(int argc, char **argv){
     }
 
     attack_list_destroy(al);
-    attack_list_destroy(al_2);
-
-
+    
     return EXIT_SUCCESS;
 }

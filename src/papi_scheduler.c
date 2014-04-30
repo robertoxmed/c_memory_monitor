@@ -1,14 +1,14 @@
 #include "../include/papi_util.h"
 
 #define MEMORY_QUOTA 129000
-#define ITERATION_MODE "0"
+#define ITERATION_MODE "1"
 #define NB_RT_ITERATION "20000000"
 
 pid_t pid_attacker[2] = {-1, -1};
 int nb_attackers = 0, send = 0;
 
 long long rt_quota_l3 = MEMORY_QUOTA; //The quota for the cache 
-int new_window = 20; // <= How many times the handler will decrement before the new window
+int new_window = 200; // <= How many times the handler will decrement before the new window
 
 void timer_handler(int signo, siginfo_t *info, void *context){
 	int i, ret;
@@ -38,7 +38,7 @@ void timer_handler(int signo, siginfo_t *info, void *context){
             fprintf(stderr, "Scheduler (%d) > New window\n", getpid());
             for(i=0; i<nb_attackers; i++)
         	   kill(pid_attacker[i], SIGCONT);
-            new_window = 20;
+            new_window = 200;
             rt_quota_l3 = MEMORY_QUOTA;
             send = 0;
         }
@@ -83,9 +83,9 @@ int main (int argc, char ** argv) {
     sigev.sigev_value.sival_ptr = &tid;
     if(timer_create(CLOCK_REALTIME, &sigev, &tid) != -1){
         new_tmr.it_value.tv_sec = 0;
-        new_tmr.it_value.tv_nsec = 250000000;
+        new_tmr.it_value.tv_nsec = 25000000;
         new_tmr.it_interval.tv_sec = 0;
-        new_tmr.it_interval.tv_nsec = 250000000;
+        new_tmr.it_interval.tv_nsec = 25000000;
     }
 
 
@@ -94,18 +94,10 @@ int main (int argc, char ** argv) {
     printf("Launching %d attackers\n", atoi(argv[2]));
     for(i=0; i < atoi(argv[2]); i++){
         if((pid_attacker[nb_attackers++] = fork()) == 0){
-            //int stdin_fd = -1;
 
             CPU_ZERO(&mask);
             CPU_SET(i+2, &mask);
             printf("Core %d\n", i+2);
-
-            /*stdin_fd = open("/dev/null", O_RDONLY);
-
-            if(stdin_fd == -1)
-                exit(127);
-            dup2(stdin_fd, 1);
-            close(stdin_fd);*/
 
             if(sched_setaffinity(getpid(), sizeof(mask), &mask)){
                 fprintf(stderr, "Sched error: set affinity\n");
@@ -117,10 +109,7 @@ int main (int argc, char ** argv) {
             if(execl("/usr/bin/xterm", "xterm", "-hold", "-e", "./bin/attack_task", "1", c, NULL) == -1){
             	exit(17);
             }
-            /*if(execl("./bin/attack_task2", "attack_task", ITERATION_MODE, NULL) == -1){
-                perror("execl");
-                exit(17);
-            }*/
+
             exit(0);
         }
     }
