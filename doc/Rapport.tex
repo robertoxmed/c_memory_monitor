@@ -1,0 +1,238 @@
+\documentclass{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[french]{babel}
+\usepackage{titlesec}
+\usepackage{graphicx}
+
+\titleformat{\chapter}[hang]{\bf\huge}{\thechapter}{2pc}{}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\begin{document}
+
+\title{Temps-réel en multi-c\oe urs : problème de la contention mémoire}
+
+\author{Louisa BESSAD \& Roberto MEDINA}
+
+\maketitle
+\tableofcontents
+
+\chapter{Problème de concurence d'accès}
+
+\section{Introduction}
+% \begin{itemize}
+% \item Description du sujet
+% \item Problématique: géstion de l'accès concurrent aux caches et à la mémoire entre une tâche temps-réel et des tâches attaquantes en sachant qu'on ne peut faire que des mesures globales dans la mémoire et pas pour chaque c\oe ur
+% \item Objectif: proposer une solution en mode user en utilisant une librairie particulière (PAPI) pour les mesures
+% \item Description de l'architecture: intel Core I3-330M Processor(2.13GHz, 3MB L3 Cache), approximation des accès mémoire par les MISS sur le L3 + schéma de la différence entre les machines qui ont fait les tests.
+% \end{itemize}
+
+  Lorsque nos véhicules ont commencés à adopter des architectures logicielles concernant l'automobile, ces dernières se contentaient seulement de respecter des contraintes au niveau du système embarqué, temporelles et de minimisation de coûts.
+  De nos jours, l'évolution de nos besoins entrainent l'intégration de plus en plus de systèmes multimédia au sein des véhicules. Ces derniers sont basés sur Linux et Androïd et utilisent des calculateurs différents des systèmes temps-réel. 
+  Grâce à des processeurs multic \oe urs nous allons pouvoir diminuer les coûts. En effet nous souhaitons éviter l'utilisation de plusieurs processeurs: certains pour les tâches temps réel et d'autre pour les applications multimédia. Si l'on utilise la virtualisation sur de telles architectures, nous pourrons éxecuter en parallèle des systèmes temps-réels et des systèmes multimédias et cela sur un même processeur.
+
+  Néanmoins pour permettre ce parallèlisme il est important de garantir le respect des contraintes de sûreté et de sécurité, cela est d'autant plus important que le système doit gérer des tâches temps-réel. Pour obtenir cette garantie il faut assurer l'isolement spatial et temporel entre les différents système, ce contrôle sera géré par un hyperviseur que nous appelerons scheduler.
+  De façon générale, les hyperviseurs dévéloppés pour les systèmes embarqués fixent sur un ou plusieurs c \oe urs les différents OS virtualisés et ce de manière exclusive. De plus chaque système d'exploitation virtualisé se voit attribué une portion de mémoire statique, par ailleurs l'isolation est assurée par les mécanismes de protection mémoire. Ainsi le partionnement de la mémoire et du processeur sont assurés.
+  Cependant certaines ressources restent partagées, c'est le cas du bus système et des caches. De fait si un c\oe ur effectue de nombreux accès mémoires il peut provoquer une saturation du bus et des caches partagés. Cela empêche les autres c\oe rs d'agir correctement, ce qui est un problème pour les tâches temps-réel, il faut donc réussir à gérer l'accès concurent à ces ressources. 
+  
+  L'objectif de ce projet est de proposer une solution en mode user au problème de contention mémoire pour des applications temps-réel s'exécutant sur des processeurs multi-c \oe urs. Il faut également mesurer les ralentissements engendrés sur les différentes tâches qui s'exécutent suite à la solicitation des différents éléments du système mémoire (Bus et Cache). Pour effectuer ces mesures nous utiliserons la librairie PAPI, nous pourrons uniquement faire des mesures gloables au niveau des accès mémoire et pas pour chaque c \oe ur du processeur. Ainsi, nous mettrons d'abord en évidence le problème via une solution sans scheduler. Ensuite nous comparerons les mesures de la solution sans scheduler à celles d'une solution avec scheduler.
+  
+Les différents programmes qui ont été développés pour ce projet ont été testés sur une architecture Intel i3-330M, première génération de ce type de processeurs, sur un système d'exploitation Ubuntu 14.04 avec le noyau Linux 3.13. Le processeur dispose de deux c\oe urs physiques et donc quatre c\oe urs logiques avec hyper-threading activé. On dispose d'un cache de niveau L1 de 64ko pour les instructions et 64ko pour les données sur caque c \oe ur. Le cache de niveau L2 est aussi exclusif aux deux c \oe urs, sa taille est de 256ko. Enfin, le cache de niveau L3 fait 3Mo. Celui-ci est partagé par les deux c \oe urs.
+
+La figure au dessous montre un schéma de l'architecture utilisée décrite auparavant. On peut aussi constater comment on va utiliser les c \oe urs pour repartir les tâches attaquantes et la tâche temps-réel.
+
+\includegraphics[width=7.5cm, height=7.5cm]{psar_archi.png}
+
+Au début du projet des tests ont été aussi réalisés sur un processeur Intel i7-3517U : deux c \oe urs physiques et quatre logiques avec un L1 de 64ko pour les données et 64ko pour les instructions, un L2 mélangé de 256ko et un L3 mélangé et partagé de taille 4Mo. Cette machine utilisait un système Arch Linux avec un noyau 3.14. Les résultats n'étaient pas satisfaisant puisque ce processeur est utilisé sur des ultrabook. Quand le processeur recevait trop de charges il activait son mécanisme de « Turbo Boost » pour répondre à la grande demande faite par l'utilisateur. Ce comportement faussait les mesures puisque la tâche temps-réel allait s'exécuter plus rapidement avec une charge concurrente plus importante, le système voulait se débarrasser le plus rapidement de ce processus pour laisser de la place aux autres tâches. Le fait que la tâche temps-réel soit maintenue moins de temps dans le processeur faisait que le nombre d'accès aux caches et à la mémoire soit inférieur aux nombre d'accès lorsque la tâche s'exécutait toute seule.
+
+
+\section{Les différentes tâches (attaquantes, temps réel)}
+% \begin{itemize}
+% \item Description des 2 types de tâches et leur impact sur la mémoire:
+% \begin{itemize}
+% \item on a une tâche temps-réelle non périodique et sans contrainte temporelle, on doit uniquement être sûre qu'elle se termine en un temps fini
+% \item les tâches attaquantes doivent effectuer un maximum d'accès mémorie afin de saturer le bus mémoire et les caches partagés entre les différents c\oe urs
+% \end{itemize}
+% \item Evolution des choix face au prefetching, régime transitoire et permanent, les printf
+% \end{itemize}
+
+  Pour représenter notre modèle automobile sur le processeur multi-c \oe ur nous allons utiliser une tâche temps-réel et plusieurs taches attaquantes. Afin de gérer au mieux la concurrence d'accès pour ces deux types de tâches nous avons dû prévoir le "prefecth" effectué par le processeur ainsi que l'optimisation faite par le compilateur.
+  
+  Nous avons développé une tâche temps-réel (src/rt\_task.c) paramétrable, non périodique dont le temps d'exécution est fini et qui accède à tous les caches ainsi qu'à la mémoire via le Bus. Notre première tâche temps-réel consistait à lire un élément au hasard dans un tableau de grande taille. Le choix aléatoire de l'élément lu évitait la lecture séquentille favorisée par le compilateur. Néanmoins cela ne permettait pas de saturer tous les caches, notamment le L3, nous n'évitions donc pas le prefetching du processeur. 
+  Nous avons donc rajouté un second tableau de même taille que le premier, ainsi nous choisissons au hasard le tableau dans lequel nous allons lire et quel élément sera lu.  De cette façon le prefetching est évité car les deux tableaux ne peuvent tenir entièrement dans le cache, on accède donc forcément à la mémoire via le Bus . De cette façon nous maximisons les accès aux caches et à la mémoire donc au Bus également.
+  
+  D'un autre côté la tâche attaquente (src/attack\_task.c), qui représente le système multimédia, doit être la plus gourmande possible. Elle va donc faire un maximum d'accès mémoire et ainsi saturer le Bus mémoire et les caches partagés entre les différents coeurs du processeur.
+  Pour cette tâche nous utilisons une liste doublement chaînée dont les éléments sont constitués d'une matrice à deux dimensions, remplie aléatoirement, et d'un index. En fonction du paramètre passé en argument on fera soit un parcours simple de la liste, soit un parcours de taille aléatoire (compteur et emplacement de départ tirés aléatoirement). Cependant quel que soit le parcours exécuté on aura un affichage de chaque matrice contenue dans tous les éléments parcourus de la liste doublement chaînée.
+  Le prefecthing est ici évité par la grande taille des matrices contenues dans chaque élément et le nombre d'éléments contenus dans la liste doublement chaînée, empêchant la structure de tenir dans les caches partagés. La lecture séquentielle effectué par le compilateur ne peut également pas être effectuée car on utilise des listes et non des tableaux.
+  Pour l'affichage nous avons limité le nombre de printf car lors des mesures nous avons remarqué que cela faussait les mesures au-delà d'un certain nombre.
+  
+
+\section{Comment mesurer?}
+\subsection{Utilisation de PAPI (fonction pour les mesures, évèments initialisés et utilisés)}
+\subsection{Mesures du nombre de MISS sur le cache partagé L3 pour approximer le nombre d'accès mémoire puisqu'on ne peut mesurer les accès mémoire sur notre machine}
+\subsection{Fonctionnement du wrapper}
+ 
+ Pour faire les mesures correspondantes à la tâche temps-réel on utilise la librairie PAPI (Performance Application Programming Interface) décrite au par avant. Notamment on utilise les fonctions de bas niveau pour avoir une meilleure granularité sur les données.
+\newline
+
+
+  Dans un premier temps on utilise un seul « event set » qui va indiquer à PAPI les différentes mesures qu'on veut faire, c'est-à-dire le nombre de cache MISS et HIT pour les niveaux L1, L2 et L3. Ce qui nous permet donc avoir un taux de cache HIT pour les différents niveau, de même que le nombre d'accès à la mémoire (nombre de cache miss au niveau L3).
+ \newline
+ 
+ 
+  Le programme qui se charge de faire les mesures s'appelle « papi\_wrapper » (src/papi\_wrapper.c). Son fonctionnement consiste à initialiser PAPI avec toutes les options nécessaires : attacher l'événement à un seul CPU, changer le domaine de mesures et la granularité, initialiser l'event set ; il faut aussi utiliser un multiplexage pour arriver à faire toutes les mesures sur un seul event set, notamment avoir le nombre de cache MISS du L3 au même temps que les autres caches. Les mesures se font sur la période stationnaire de la tâche temps réel. Les compteurs sont initialisés après que la tâche temps-réel est lancée et ils sont arrêtés avant que le processus se termine.
+ 
+ Comme ses fonctionnalités vont être utilisées par le scheduler plus tard dans le projet, l'initialisation des éléments utilisés pour le faire le benchmarking vont être mis dans un fichier utilitaire appelé « papi\_util » (src/papi\_util.c).
+ 
+ Pour arriver à faire le benchmarking le wrapper va se forker, lancer la tâche temps-réel en la clouant à un seul CPU, avec la plus haute priorité FIFO ; on utilise les fonctions du scheduler (sched\_setaffinity, sched\_setscheduler) pour arriver à ceci. On ne veut pas que le processus fasse une migration de CPU parce que les mesures ne vont pas correspondre à la bande passante de la tâche temps-réel. Dans notre cas on utilise le deuxième CPU pour la tâche temps-réel. Une fois forké, le wrapper va attendre la période stationnaire de la tâche temps-réel et mesurer les événements grâce à PAPI pendant une période de huit secondes. Après il attend la fin de son fils et fait la destruction du set pour se finir en affichant le temps d'exécution et en ajoutant les données qui seront utilisés par gnuplot sur des fichiers texte.
+ 
+Le wrapper peut prendre n'importe quel programme pour le lancer et faire des mesures de performance. Cependant il va clouer la tâche passée en paramètre au deuxième c\oe ur tout le temps.
+PAPI va nécessiter les droits de super-utilisateur pour arriver à attacher l'event set utilisé à un seul CPU (PAPI\_set\_opt avec l'option PAPI\_CPU\_ATTACH).
+
+Pour avoir une meilleure perception sur la performance de la tâche temps-réel on va isoler les c\oe urs qui vont être utilisés pour la tâche temps-réel, et pour les attaquants. Dans l'architecture utilisée pour les tests on dispose de quatre c\oe urs : on va utiliser un pour l'OS, un pour le temps-réel et les deux autres pour les attaquants. L'isolation se fait avec la ligne de commande du noyau. On utilise l'option « isolcpus » passés au démarrage à travers GRUB 2.
+ 
+ Lancer d'autres tâches attaquantes sur les CPUs déjà utilisés ne va plus influencer le temps d'exécution de la tâche temps-réel. On va avoir une stabilisation de la courbe une fois qu'on n'a plus de CPUs disponibles.
+
+En fonction du gouverneur du CPU les résultats peuvent varier, on a fait les mesures en utilisant le gouverneur « powersave » et « performance ». On peut considérer que dans un système embarqué on va préférer un gouverneur de type « powersave ». L'ensemble des tests ont été faits sur des noyau récents : 3.13.x .
+
+Un facteur qui est pris en compte pour le benchmark c'est le prefetching fait par le compilateur et par le CPU. C'est difficile de savoir comment va réagir le CPU ou le compilateur pour les tâches attaquantes et la tâche temps-réel. On a donc deux modes de parcours de liste chaîné pour les attaquants. Un mode où la liste est parcourue linéairement donc le prefetching du compilateur et du CPU devraient être utilisés fortement dû à localité spatiale. Un autre mode avec un parcours aléatoire où on ne veut pas que le prefetching soit  utilisé, on ne veut pas que le compilateur où le CPU connaissent la prochaine instruction ou donnée qui va être sollicitée.
+
+La tâche temps-réel va faire un parcours aléatoire de deux tableaux. Les tableaux sont assez grands pour qu'ils soient mis sur la mémoire et pas seulement sur le cache L3. Comme pour les tâches attaquantes le parcours aléatoire des deux tableaux va rendre le prefetching impossible ou minimal.
+
+Effectivement le but est de solliciter le plus possible le bus mémoire du processeur pour toutes les tâches.les tests on dispose de quatre c\oe urs : on va utiliser un pour l'OS, un pour le temps-réel et les deux autres pour les attaquants. L'isolation se fait avec la ligne de commande du noyau. On utilise l'option « isolcpus » passés au démarrage à travers GRUB 2.
+
+% \begin{itemize}
+% \item Utilisation de PAPI (fonction pour les mesures, évèments initialisés et utilisés)
+% \item Mesures du nombre de MISS sur le cache partagé L3 pour approximer le nombre d'accès mémoire puisqu'on ne peut mesurer les accès mémoire sur notre machine
+% \item Fonctionnement du wrapper
+% \end{itemize}
+
+\section{Résultats et analyse des courbes}
+
+\subsection{Evolution des résultats avec les évolutions de code, en fonction du gouverneur du CPU (si on teste sur plusieurs machines), 2 attaquants au lieu de 3 (garder un c\oe ur pour l'OS), désactivation du scheduler (pas d'autres scheduler sur les c\oe urs utilisés)}
+\subsection{Différences des résultats avec pré-fecthing}
+\subsection{Résultats sur le temps d'exécution ou le nombre d'octets lu pendant la période de mesures par chaque c\oe ur (C1 puis C1 \& 2 puis C1,2 \& 3)}
+
+Les premiers résultats ont été faits avec un gouverneur « performance » et en utilisant un parcours aléatoire pour les tâches attaquantes. On a lancé cinquante fois le wrapper sans tâches attaquantes au début, après avec une tâche attaquante pour finir avec deux attaquants, donc un total de cent cinquante exécutions pour le wrapper. Les tâches attaquantes vont faire un parcours aléatoire en se lançant sur un autre terminal pour que l'OS puisse forcer le pourcentage d'utilisation du CPU. Ces processus vont contenir 900.000 éléments. La tâche temps réel va faire vingt millions d'itérations avant de se terminer. (Script lancer\_benchmark.sh).
+
+Les résultats montrent une augmentation de 14\% sur le temps d'exécution pour la tâche temps-réel quand on rajoute un attaquant. Et une augmentation de 35\% avec deux attaquants.
+Pour le processus temps-réel seul, le temps d'exécution est aux alentours de 55 secondes, avec un attaquant on monte à 64 secondes et avec trois attaquants on arrive jusqu'à 89 secondes.
+
+\includegraphics[width=7.5cm, height=7.5cm]{benchmark_wrapper_performance.png}
+
+Le nombre d'accès au caches de niveau inférieur et à la mémoire vont augmenter aussi. Pour les miss de niveau L1 on a une augmentation de facteur 1.9 pour les cache MISS totaux (instructions et données) avec un attaquant. Puis une augmentation de facteur 3.5 avec deux attaquants par rapport à un seul attaquant.
+
+\includegraphics[width=7.5cm, height=7.5cm]{benchmark_wrapper_missL1.png}
+
+Le taux de MISS du L2 ne vas pas avoir des variances aussi grandes puisque les tâches attaquantes ont leur propre cache L2, la taille du cache est aussi un facteur qui influence beaucoup les mesures. Le cache utilisé par la tâche temps-réel est celui qui est partagé avec l'OS. Entre zéro et un attaquant la différence est 1.57 taux de MISS. Et entre un et deux attaquants le rapport est de 1.81 .
+
+\includegraphics[width=7.5cm, height=7.5cm]{benchmark_wrapper_missL2.png}
+
+
+Enfin, le taux de MISS pour le niveau L3 va avoir des rapports plus élevés puisque qu'il est partagé avec les autres tâches attaquantes. On a un facteur de 6.23 pour un attaquant et un facteur de 1.13 pour deux attaquants. Ceci est dû à la surcharge du cache L3. Avec un seul attaquant le cache est déjà saturé puisqu'on utilise autour de 200 Mo de mémoire pour chaque attaquant. De même les mesures faites par PAPI concernent toutes les tâches : attaquants et temps-réel. Donc les accès mémoires sont mélangés.
+
+\includegraphics[width=7.5cm, height=7.5cm]{benchmark_wrapper_missL3.png}
+
+
+Le cache partagé (niveau L3) va être le plus pollué par les données et les instructions des tâches attaquantes. Ceci va avoir des influences sur les autres niveau de cache pour la tâche temps-réel : quand la donnée qui doit être chargée par le parcours aléatoire ne va pas se trouver sur le niveau de dessous c'est très probable que la donnée se trouve dans la mémoire et pas dans le cache de niveau L3 puisque ce cache est pollué et saturé par les tâches attaquantes. De même les tableaux gérés par le processus temps-réel ont une taille plus grande que tout le niveau L3 du cache c'est-a-dire plus de 2Mo de données. Les données et les instructions vont être remplacées assez souvent dans le cas du parcours aléatoire et un peu moins souvent quand les tâches utilisent un parcours linéaire.
+% \begin{itemize}
+% \item Evolution des résultats avec les évolutions de code, en fonction du gouverneur du CPU (si on teste sur plusieurs machines), 2 attaquants au lieu de 3 (garder un c\oe ur pour l'OS), désactivation du scheduler (pas d'autres scheduler sur les c\oe urs utilisés)
+% \item Différences des résultats avec pré-fecthing
+% \item Résultats sur le temps d'exécution ou le nombre d'octets lu pendant la période de mesures par chaque c\oe ur (C1 puis C1 \& 2 puis C1,2
+%   \& 3)
+% \end{itemize}
+
+\section{Conclusion}
+
+\subsection{conclure sur le problème d'accès mémoire à une tâche temps-réel face à des attaquants}
+\subsection{ouvrir sur une solution en mode user qui sera la sous-réservation de BP mémoire}
+
+Les tests effectués sur l'architecture Intel, montrent à quel point la tâche temps-réel va être influencée par des tâches attaquantes très gourmandes en mémoire. Le temps d'exécution qui augmente comme le nombre d'accès à la mémoire vont être des problèmes très graves pour un processus de ce type, puisque le pire cas d'exécution ne vas pas être du tout le même avec ou sans des attaquants. Les différentes ressources partagées sont la cause de ce problème et le problème de contention mémoire est bien visible avec les différents tests qui ont été effectués.
+
+% Le comportement des caches et de la mémoire avec des attaquants explique très bien comment les ressources partagées vont influencer le temps d'exécution de la tâche temps-réel.
+
+% Les benchmarks faits sur l'architecture Intel nous permettent de conclure que les tâches attaquantes vont être en concurrence avec la tâche temps-réel, surtout au niveau de la mémoire. Ceci a des conséquences directes sur le temps d'exécution de la dernière, ce qui peut va impacter sur le pire cas que doit assurer la tâche temps-réel.
+
+% \begin{itemize}
+% \item conclure sur le problème d'accès mémoire à une tâche temps-réel face à des attaquants
+% \item ouvrir sur une solution en mode user qui sera la sous-réservation de BP mémoire
+% \end{itemize}
+
+\chapter{Problème de la sous-réservation de BP mémoire:}
+
+\section{Introduction}
+
+  Grâce à notre premier modèle sans scheduler nous avons pu vérifier le fait que si on lance de nombreuses tâches attaquantes gourmandes en mémoire, deux dans notre cas, les contraintes de la tâche temps-réels peuvent ne pas être satisfaites, notamment au niveau du temps d'exécution ou la possibilité d'accès à la mémoire. Dans un système embarqué cela ne peut être possible, nous allons donc étudier une seconde solution qui utilisera un scheduler. C'est le scheduler qui va s'occuper de la gestion des accès mémoire des différentes tâches attaquantes et temps-réel. 
+  Afin de gérer ces accès on va utiliser un mécanisme de sous-réservation de la bande passante mémoire. Pour cela nous allons mesurer la bande passante minimale que le contrôleur mémoire peut fournir en permanence, quelque soit l'état de la mémoire. Ensuite nous devons savoir quelle portion de cette bande pasante minimale doit être alloué à la tâche temps-réel afin que la contrainte temporelle soit respectée.
+\subsection{Explication du problème de sous-réservation de BP mémoire}
+\subsection{Les problèmes que cette solution peut générer: comment gérer les accès mémoire tout en gardant une certaine concurrence}
+\subsection{ Une solution proposée: Création du scheduler envoyant des signaux aux différentes tâches lorqu'elles ont consommées toute la BP accordé et que la tâche temps-réel n'a pas encore utilisé sa BP et remise à zéros des différents compteurs de BP dans ce cas}
+
+
+\section{Le scheduler, la tâche temps-réel et les tâches attaquantes}
+
+\subsection{Evolution du fonctionnement de la tâche temps-réel et des tâches attaquantes face à l'insertion de l'envoi de signaux}
+\subsection{Description du fonctionnement du scheduler (mesure de la consommation de BP, gestion des compteurs mesurant cette consommation et envoie de signaux aux différentes tâches), problèmes rencontrés ou pas}
+\subsection{Comment utiliser PAPI dans cette situation (fonctionnalitées rajoutées)}
+
+
+La solution que nous proposons en mode utilisateur s'appelle « papi\_scheduler » (src/papi\_scheduler.c). Ce scheduler va reprendre les fonctionnalités de base de « papi\_wrapper » et va utiliser aussi le fichier utilitaire « papi\_util », en clouant une tâche temps-réel au deuxième CPU et en faisant des mesures de performance pour ce processus.
+
+Ce qui a été rajouté au wrapper pour faire un type d'ordonnancement est un timer POSIX qui se déclenche toutes les 0.025 secondes, pour que le scheduler vérifie combien d'accès mémoire ont été effectués. On ne dispose pas d'interrupteurs matériels qui peuvent détecter si on dépasse un quota d'accès mémoire. Ce timer utilise un signal temps-réel (SIGTRMIN) et le handler qui a été défini pour ce singal va se charger de consulter les valeurs combien d'accès mémoire ont été faits. Un event set spécifique (scheduler\_eventset) pour les accès mémoire a été rajouté puisqu'il doit être réinitialisé toutes après chaque fenêtre d'exécution.
+
+Les fenêtres d'exécution peuvent correspondre aux échéances de la tâche temps-réel. Par exemple, dans notre cas, on veut assurer que toutes les cinq secondes le nombre d'accès mémoire ne dépasse pas les 129.000 accès. Ce nombre d'accès correspond aux nombre d'accès faits par l'OS et la tâche attaquante qui tournent sur le premier et le deuxième c\oe ur. Évidemment ce nombre peut varier dû à des interruptions ou à d'autres comportements du système d'exploitation. En fonction des architectures le nombre d'accès peut varier aussi.
+
+Plusieurs aspects doivent être pris en compte pour que le scheduler ait le comportement voulu : si le timer se déclenche pour des périodes qui sont en dessous de 0.01 secondes, PAPI va mesurer 0 accès mémoire et les compteurs vont être saturés. Si on prend une période plus longue on perd en précision pour savoir quand est-ce que le quota d'accès mémoire a été dépassé et les tâches attaquantes vont être arrêtes trop tard, ce qui va provoquer une augmentation sur le temps d'exécution de la tâche temps-réel.
+
+Si cette période est trop longue aussi ça peut arriver que les processus attaquants n'arrivent pas à s'arrêter complètement puisque la nouvelle fenêtre d'exécution va arriver plus tôt.
+Si le quota d'accès mémoire est dépassé très vite les tâches attaquantes ne vont pas pouvoir s'exécuter pendant que la tâche temps-réel s'exécute. Le problème va dans l'autre sens aussi, si la fenêtre d'exécution est trop courte les tâches attaquantes ne vont pas réussir a être arrêtés et le temps d'exécution va être comparable à celui du wrapper.
+
+Le schéma général d'exécution du scheduler est le suivant :
+
+Après avoir initialisé toutes les variables qui vont être utilisés pour les mesures en utilisant les fonctions de « papi\_util », le scheduler initialise le timer qui va être utilisé en définissant le handler pour celui-ci.
+Ce programme prend en paramètre le nombre d'attaquants qui vont être lancés avec la tâche temps-réel. Le scheduler se forke le nombre de fois que l'utilisateur a demandé en lançant les processus attaquants sur des émulateurs de terminaux. Les émulateurs commencent à s'exécuter sur les CPUs 3 et 4 mais l'OS les fait migrer la plus part du temps vers le CPU 0, ceci doit être un effet de bord du fait d'utiliser le serveur X sur un seul c\oe ur. Cependant les tâches attaquantes sont bien clouées aux CPUs 3 et 4. Par défaut les processus attaquants vont utiliser un parcours aléatoire et vont créer 900.000 éléments. Les conditions sont donc les mêmes que pour le wrapper.
+Il faut attendre la période stationnaire des tâches attaquantes pour pouvoir lancer la tâche-temps réel puisqu'au début les attaquants font l'allocation des éléments de la liste.
+
+Une fois que cette étape a été atteinte, le scheduler va se forker une dernière fois pour lancer la tâche temps-réel sur le deuxième CPU, exactement pareil que le wrapper.
+
+Pendant que la tâche temps-réel va s'exécuter, le scheduler va recevoir les SIGTRMIN du timer. Il consulte donc la valeur du compteur d'accès mémoire. Il va décrémenter une variable « rt\_quota\_l3 » initialisé avec le nombre d'accès mémoire définis dans une macro. Si la variable atteint zéro ou une valeur négative, le scheduler va envoyer un signal SIGSTOP aux attaquants. Pour ne pas renvoyer les signaux on a une autre variable qui sert de boolean.
+Chaque fois que le handler va être exécuté une variable « new\_window » va être décrémentée. Quand la variable atteint zéro, alors il faut commencer une nouvelle fenêtre d'exécution. Le scheduler va envoyer les SIGCONT aux tâches attaquantes et réinitialiser toutes les variables globales pour le quota,  les signaux et pour la fenêtre d'exécution.
+Ce procédé est répeté jusqu'à que la tâche temps-réel se termine.
+
+En plus de l'ordonnancement, le scheduler va faire les mesures de performance exactement de la même manière que le wrapper, en écrivant sur d'autres fichier pour que gnuplot puisse les utiliser après pour faire les graphes.
+
+Le schéma du scheduler:
+
+\includegraphics[width=7.5cm, height=7.5cm]{papi_scheduler.png}
+
+
+
+% \begin{itemize}
+% \item Evolution du fonctionnement de la tâche temps-réel et des tâches attaquantes
+%   face à l'insertion de l'envoi de signaux
+% \item Description du fonctionnement du scheduler (mesure de la consommation
+%   de BP, gestion des compteurs mesurant cette consommation et envoie
+%   de signaux aux différentes tâches), problèmes rencontrés ou pas
+% \item Comment utiliser PAPI dans cette situation (fonctionnalitées rajoutées)
+% \end{itemize}
+
+\section{Mesures, résultats et analyse}
+\subsection{hangement de la méthode de mesure}
+\subsection{ Analyse des courbes obtenues avec la solution proposée}
+
+Les différentes tâches attaquantes et temps-réel vont avoir les même paramètres utilisés pour le wrapper mais cette fois pour les tests du scheduler. C'est-à-dire qu'on utilise un parcours aléatoire pour les tâches attaquantes sur des listes de 900.000 éléments. Le processus temps-réel va faire 20'000.000 d'itérations et va être attaché au deuxième CPU logique. Les attaquants vont être attachés aux CPUs trois et quatre.
+
+Le premier graphe présenté veut montrer la différence sur le temps d'exécution avec et sans le méchanisme d'arrêt pour les tâches attaquantes.
+
+On peut constater qu'on a une légère augmentation sur le temps d'exécution quand on passe de zéro à un attaquant.
+
+\section{Conclusion}
+\subsection{La solution résout-elle le problème de contention mémoire, si oui pourquoi?}
+
+\chapter{Conclusion face au sujet proposé:}
+\subsection{ Avantages et inconvénients de l'utilisation du scheduler et comparaison avec la première partie}
+\subsection{ Ouverture: Existe-t-il une solution plus optimale?}
+
+\end{document}
