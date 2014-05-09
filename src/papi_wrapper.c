@@ -28,7 +28,6 @@ int main (int argc, char ** argv) {
     if (stdin_fd == -1)
       exit(127);
     dup2(stdin_fd, 1);
-    dup2(stdin_fd, 2);
     close(stdin_fd);
 
     s_param.sched_priority = sched_get_priority_max(SCHED_FIFO);

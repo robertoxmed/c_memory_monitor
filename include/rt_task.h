@@ -4,6 +4,7 @@
 #include <time.h>
 #include <sched.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #define SIZE 32768

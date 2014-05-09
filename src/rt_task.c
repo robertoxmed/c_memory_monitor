@@ -41,12 +41,25 @@ int main(int argc, char* argv[]){
 
   int tab_1[SIZE];
   int tab_2[SIZE];
+  int j = 0;
   int nb_iter = atoi(argv[1]), i=0;
 
   rt_task_init(tab_1, tab_2);
 
+  struct timeval  tv1, tv2;
+  gettimeofday(&tv1, NULL);
+
+
   while (i!=nb_iter){
+    gettimeofday(&tv2, NULL);
+    if(j < 1090909 && ((double)(tv2.tv_sec - tv1.tv_sec)) > 3){
+      system("sudo beep -f 18000");
+      fprintf(stderr, "RT Task > Vous êtes mort X_X \n");
+      gettimeofday(&tv1, NULL);
+      j = 0;
+    }
     rt_task_treatement(tab_1,tab_2,i);
+    j++;
     i++;
   }
  
