@@ -110,26 +110,26 @@ En fonction du gouverneur du CPU les résultats peuvent varier, on a fait les mes
 
 Les premiers résultats ont été faits avec un gouverneur « performance » et en utilisant un parcours aléatoire pour les tâches attaquantes. On a lancé cinquante fois le wrapper sans tâches attaquantes au début, après avec une tâche attaquante et pour finir avec deux attaquants, on a donc un total de cent cinquante exécutions pour le wrapper. Les tâches attaquantes vont faire un parcours aléatoire en se lançant sur un autre terminal pour que l'OS puisse forcer le pourcentage d'utilisation du CPU. Ces processus vont contenir 900.000 éléments. La tâche temps réel va faire vingt millions d'itérations avant de se terminer. (Script lancer\_benchmark.sh).
 
-Les résultats montrent une augmentation de 14\% sur le temps d'exécution pour la tâche temps-réel quand on ajoute un attaquant et une augmentation de 35\% avec deux attaquants.
-Pour la tâche temps-réel seule, le temps d'exécution est environ de 55 secondes, avec un attaquant on monte à 64 secondes et avec trois attaquants on arrive jusqu'à 89 secondes.
+Les résultats montrent une augmentation de 15\% sur le temps d'exécution pour la tâche temps-réel quand on ajoute un attaquant et une augmentation de 36\% avec deux attaquants.
+Pour la tâche temps-réel seule, le temps d'exécution est environ de 55 secondes, avec un attaquant on monte à 62.53 secondes et avec trois attaquants on arrive jusqu'à 85.37 secondes.
 
 \begin{center}
 \includegraphics[width=7.5cm, height=7.5cm]{benchmark_wrapper_performance.png}
 \end{center}
 
-Le nombre d'accès aux caches de niveau inférieurs et à la mémoire vont augmenter aussi. Pour les miss de niveau L1 on a une augmentation de facteur 1.9 pour les cache MISS totaux (instructions et données) avec un attaquant. Puis une augmentation de facteur 3.5 avec deux attaquants par rapport à un seul attaquant.
+Le nombre d'accès aux caches de niveau inférieurs et à la mémoire vont augmenter aussi. Pour les miss de niveau L1 on a une augmentation de facteur 1.79 pour les cache MISS totaux (instructions et données) avec un attaquant. Puis une augmentation de facteur 3.86 avec deux attaquants par rapport à un seul attaquant.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL1.png}
 \end{center}
 
-Le taux de MISS du L2 ne vas pas avoir de variantions aussi grandes puisque les tâches attaquantes ont leur propre cache L2, la taille du cache est aussi un facteur qui influence beaucoup les mesures. Le cache utilisé par la tâche temps-réel est celui qui est partagé avec l'OS. Entre zéro et un attaquant la différence est 1.57 taux de MISS. Et entre un et deux attaquants le rapport est de 1.81 .
+Le taux de MISS du L2 ne vas pas avoir de variantions aussi grandes puisque les tâches attaquantes ont leur propre cache L2, la taille du cache est aussi un facteur qui influence beaucoup les mesures. Le cache utilisé par la tâche temps-réel est celui qui est partagé avec l'OS. Entre zéro et un attaquant la différence est 1.73 taux de MISS. Et entre un et deux attaquants le rapport est de 0.90.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL2.png}
 \end{center}
 
-Enfin, le taux de MISS pour le niveau L3 va avoir des rapports plus élevés puisque qu'il est partagé avec les autres tâches attaquantes. On a un facteur de 6.23 pour un attaquant et un facteur de 1.13 pour deux attaquants, ceci est dû à la surcharge du cache L3. Avec un seul attaquant le cache est déjà saturé puisqu'on utilise autour de 200 Mo de mémoire pour chaque attaquant. Il en est de même les mesures faites par PAPI concernent toutes les tâches : attaquantes et temps-réel, on peut donc en déduire que les accès mémoires sont mélangés.
+Enfin, le taux de MISS pour le niveau L3 va avoir des rapports plus élevés puisque qu'il est partagé avec les autres tâches attaquantes. On a un facteur de 32.10 pour un attaquant et un facteur de 1.11 pour deux attaquants, ceci est dû à la surcharge du cache L3. Avec un seul attaquant le cache est déjà saturé puisqu'on utilise autour de 200 Mo de mémoire pour chaque attaquant. Il en est de même les mesures faites par PAPI concernent toutes les tâches : attaquantes et temps-réel, on peut donc en déduire que les accès mémoires sont mélangés.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL3.png}
@@ -137,25 +137,25 @@ Enfin, le taux de MISS pour le niveau L3 va avoir des rapports plus élevés puisq
 
 Le cache partagé (niveau L3) va être le plus pollué par les données et les instructions des tâches attaquantes. Ceci va avoir des influences sur les autres niveau de cache pour la tâche temps-réel : quand la donnée qui doit être chargée par le parcours aléatoire ne va pas se trouver sur le niveau du dessous il est fortement probable que la donnée se trouve dans la mémoire et pas dans le cache de niveau L3 car ce cache est pollué et saturé par les tâches attaquantes. De même les tableaux gérés par la tâche temps-réel ont une taille plus grande que tout le niveau L3 du cache c'est-a-dire plus de 2Mo de données. Les données et les instructions vont être assez souvent écrasées dans le cas du parcours aléatoire et un peu moins souvent quand les tâches utilisent un parcours linéaire.
 
-Dans un deuxième temps nous avons fait des mesures en utilisant le gouverneur « powersave ». Nous nous attendions à des augmentations dans le temps d'exécution pour la tâche temps-réel, ce qui est bien le cas. Nous avons plus ou moins doublé le temps d'exécution, c'est-à-dire aux alentours de 120 secondes pour la tâche temps-réel toute seule. Puis 162 secondes avec un attaquant et enfin 212 secondes pour deux attaquants. On a donc une augmentation de 35\% pour un attaquant et 30\% pour deux attaquants par rapport à un seul. Par rapport au gouverneur « performance » un attaquant entraîne une forte hausse sur le temps d'exécution.
+Dans un deuxième temps nous avons fait des mesures en utilisant le gouverneur « powersave ». Nous nous attendions à des augmentations dans le temps d'exécution pour la tâche temps-réel, ce qui est bien le cas. Nous avons plus ou moins doublé le temps d'exécution, c'est-à-dire aux alentours de 131 secondes pour la tâche temps-réel toute seule. Puis 162 secondes avec un attaquant et enfin 212 secondes pour deux attaquants. On a donc une augmentation de 22\% pour un attaquant et 31\% pour deux attaquants par rapport à un seul. Par rapport au gouverneur « performance » un attaquant entraîne une forte hausse sur le temps d'exécution.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_powersave.png}
 \end{center}
 
-Concernant le nombre de MISS pour le niveau L1 on a un facteur d'augmentation de 3.64 quand on passe à un attaquant. Puis un facteur de 1.16 avec deux attaquants.
+Concernant le nombre de MISS pour le niveau L1 on a un facteur d'augmentation de 3.50 quand on passe à un attaquant. Puis un facteur de 1.28 avec deux attaquants.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL1_powersave.png}
 \end{center}
 
-Le nombre de MISS pour le niveau L2 montre une augmentation de 1.52 puis de 1.24.
+Le nombre de MISS pour le niveau L2 montre une augmentation de 2.15 puis cette valeur a tendance à se stabiliser.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL2_powersave.png}
 \end{center}
 
-En comparaison le nombre d'accès mémoire augmente d'un facteur 3.16 avec un attaquant et 1.09 pour deux attaquants.
+En comparaison le nombre d'accès mémoire augmente d'un facteur 32.10 avec un attaquant et 1.11 pour deux attaquants.
 
 \begin{center}
 \includegraphics[width=10cm, height=7.5cm]{benchmark_wrapper_missL3_powersave.png}

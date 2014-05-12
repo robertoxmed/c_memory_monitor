@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="schema_psar.svg">
+   sodipodi:docname="psar_archi.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -24,17 +24,21 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7"
-     inkscape:cx="288.10676"
-     inkscape:cy="430.76078"
+     inkscape:zoom="0.35"
+     inkscape:cx="30.94701"
+     inkscape:cy="507.0445"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1360"
-     inkscape:window-height="729"
+     showgrid="true"
+     inkscape:window-width="1364"
+     inkscape:window-height="699"
      inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-y="27"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3050" />
+  </sodipodi:namedview>
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -419,5 +423,65 @@
        id="path3477-59"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
-  </g>
+    <rect
+       style="fill:#008073;fill-opacity:1;stroke:#000000;stroke-width:1.67338598;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect3052"
+       width="658.20477"
+       height="106.89005"
+       x="79.836693"
+       y="892.19885" />
+    <path
+       style="fill:#00e025;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;fill-opacity:1"
+       d="m 160.85786,849.38247 25,-25 0,15 440,0 0,-15 25,25 -25,25 0,-15 -440,0 0,15 z"
+       id="path3824"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 545,839.36216 0,-32"
+       id="path3477-59-4"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 294,839.36216 0,-32"
+       id="path3477-59-0"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 295,892.36216 0,-32"
+       id="path3477-59-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 545,892.36216 0,-33"
+       id="path3477-59-2"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <flowRoot
+       transform="translate(394.9375,605.72143)"
+       xml:space="preserve"
+       id="flowRoot3164-1-0"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><flowRegion
+         id="flowRegion3166-1-8"><rect
+           id="rect3168-6-9"
+           width="210.01173"
+           height="33.937256"
+           x="5.0507627"
+           y="207.70348" /></flowRegion><flowPara
+         id="flowPara3170-7-3"
+         style="font-size:24px">Bus</flowPara></flowRoot>    <flowRoot
+       transform="translate(374.9375,720.72143)"
+       xml:space="preserve"
+       id="flowRoot3164-1-0-3"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><flowRegion
+         id="flowRegion3166-1-8-9"><rect
+           id="rect3168-6-9-0"
+           width="210.01173"
+           height="33.937256"
+           x="5.0507627"
+           y="207.70348" /></flowRegion><flowPara
+         id="flowPara3170-7-3-9"
+         style="font-size:24px">Mémoire</flowPara></flowRoot>  </g>
 </svg>

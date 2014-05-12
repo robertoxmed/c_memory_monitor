@@ -52,8 +52,7 @@ int main(int argc, char* argv[]){
 
   while (i!=nb_iter){
     gettimeofday(&tv2, NULL);
-    if(j < 1090909 && ((double)(tv2.tv_sec - tv1.tv_sec)) > 3){
-      system("sudo beep -f 18000");
+    if(j < 1090910 && ((double)(tv2.tv_sec - tv1.tv_sec)) > 3){
       fprintf(stderr, "RT Task > Vous êtes mort X_X \n");
       gettimeofday(&tv1, NULL);
       j = 0;
